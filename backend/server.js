@@ -8,6 +8,7 @@ const database = require('./database');
 const TursoSessionStore = require('./turso-session-store');
 
 const app = express();
+app.set('trust proxy', 1);
 const port = Number(process.env.PORT || 3000);
 
 app.disable('x-powered-by');
