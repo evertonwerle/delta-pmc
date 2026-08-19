@@ -4,18 +4,18 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/', auth, (req, res) => {
-  res.json(db.all('SELECT * FROM membros ORDER BY personagem COLLATE NOCASE'));
+router.get('/', auth, async (req, res) => {
+  res.json(await db.all('SELECT * FROM membros ORDER BY personagem COLLATE NOCASE'));
 });
 
-router.post('/', auth, (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const { personagem, id_jogador, patente, cargo_delta, status, data_entrada, observacoes } = req.body || {};
     if (!personagem || !id_jogador) {
       return res.status(400).json({ erro: 'Personagem e ID são obrigatórios.' });
     }
 
-    db.run(
+    await db.run(
       `INSERT INTO membros
        (personagem, id_jogador, patente, cargo_delta, status, data_entrada, observacoes)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,

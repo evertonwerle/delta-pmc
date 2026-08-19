@@ -1,12 +1,16 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const db = require('../backend/database');
 
+(async () => {
+  await db.ready;
+
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-db.exec(schema);
+await db.exec(schema);
 
 // Estruturas do Hall de Entrada dos pilotos aprovados.
-db.exec(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS apreensoes (
   id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, ocorrencia TEXT NOT NULL, item TEXT NOT NULL,
   quantidade INTEGER NOT NULL DEFAULT 1, observacoes TEXT, criado_em TEXT NOT NULL DEFAULT (datetime('now')),
@@ -24,7 +28,7 @@ CREATE TABLE IF NOT EXISTS fardamentos (
 
 // Histórico de candidaturas finalizadas. A candidatura ativa pode ser removida
 // após reprovação/deleção sem perder o registro administrativo.
-db.exec(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS candidaturas_historico (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   candidatura_id INTEGER,
@@ -50,7 +54,7 @@ CREATE TABLE IF NOT EXISTS candidaturas_historico (
 
 
 
-db.exec(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS exoneracoes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   usuario_id INTEGER,
@@ -76,10 +80,10 @@ CREATE TABLE IF NOT EXISTS retornos_atividade (
   FOREIGN KEY (candidatura_id) REFERENCES candidaturas(id) ON DELETE SET NULL
 );`);
 
-db.exec(`CREATE TABLE IF NOT EXISTS vtrs (id INTEGER PRIMARY KEY AUTOINCREMENT,prefixo TEXT NOT NULL UNIQUE,modelo TEXT NOT NULL,placa TEXT,status TEXT NOT NULL DEFAULT 'DISPONIVEL',observacoes TEXT,criado_em TEXT NOT NULL DEFAULT (datetime('now')),atualizado_em TEXT NOT NULL DEFAULT (datetime('now')));CREATE INDEX IF NOT EXISTS idx_vtrs_status ON vtrs(status);`);
+await db.exec(`CREATE TABLE IF NOT EXISTS vtrs (id INTEGER PRIMARY KEY AUTOINCREMENT,prefixo TEXT NOT NULL UNIQUE,modelo TEXT NOT NULL,placa TEXT,status TEXT NOT NULL DEFAULT 'DISPONIVEL',observacoes TEXT,criado_em TEXT NOT NULL DEFAULT (datetime('now')),atualizado_em TEXT NOT NULL DEFAULT (datetime('now')));CREATE INDEX IF NOT EXISTS idx_vtrs_status ON vtrs(status);`);
 
-function hasColumn(table, column) {
-  return db.all(`PRAGMA table_info(${table})`).some(c => c.name === column);
+async function hasColumn(table, column) {
+  return (await db.all(`PRAGMA table_info(${table})`)).some(c => c.name === column);
 }
 
 const migrations = [
@@ -93,14 +97,14 @@ const migrations = [
   [`apreensoes`, `imagem_url`, `ALTER TABLE apreensoes ADD COLUMN imagem_url TEXT`]
 ];
 for (const [table, column, sql] of migrations) {
-  if (!hasColumn(table, column)) db.exec(sql);
+  if (!(await hasColumn(table, column))) await db.exec(sql);
 }
 
-db.run("UPDATE users SET status_conta = 'ATIVA' WHERE status_conta IS NULL OR TRIM(status_conta) = ''");
-db.run("UPDATE users SET cargo_delta = 'PILOTO PROBATORIO' WHERE cargo_delta IS NULL OR TRIM(cargo_delta) = ''");
-db.run("UPDATE users SET inscricao_enviada = 1 WHERE id IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL)");
+await db.run("UPDATE users SET status_conta = 'ATIVA' WHERE status_conta IS NULL OR TRIM(status_conta) = ''");
+await db.run("UPDATE users SET cargo_delta = 'PILOTO PROBATORIO' WHERE cargo_delta IS NULL OR TRIM(cargo_delta) = ''");
+await db.run("UPDATE users SET inscricao_enviada = 1 WHERE id IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL)");
 
-db.exec(`
+await db.exec(`
 CREATE TABLE IF NOT EXISTS portal_conteudos (
   id INTEGER PRIMARY KEY AUTOINCREMENT, chave TEXT NOT NULL, titulo TEXT NOT NULL, conteudo TEXT NOT NULL,
   ordem INTEGER NOT NULL DEFAULT 0, ativo INTEGER NOT NULL DEFAULT 1, criado_por INTEGER, atualizado_por INTEGER,
@@ -151,6 +155,8 @@ const defaults = [
   ['EDITAL','Acompanhamento','Protocolos de acompanhamento tático seguem distância mínima de segurança, comunicação constante com a central e avaliação de risco contínua durante toda a ocorrência.',10]
 ];
 for (const [categoria,titulo,conteudo,ordem] of defaults) {
-  const existe = db.get('SELECT id FROM documentos WHERE categoria = ? AND ordem = ? LIMIT 1', [categoria,ordem]);
-  if (!existe) db.run(`INSERT INTO documentos (categoria,titulo,conteudo,ordem,ativo,atualizado_em) VALUES (?,?,?,?,1,datetime('now'))`, [categoria,titulo,conteudo,ordem]);
+  const existe = await db.get('SELECT id FROM documentos WHERE categoria = ? AND ordem = ? LIMIT 1', [categoria,ordem]);
+  if (!existe) await db.run(`INSERT INTO documentos (categoria,titulo,conteudo,ordem,ativo,atualizado_em) VALUES (?,?,?,?,1,datetime('now'))`, [categoria,titulo,conteudo,ordem]);
 }
+
+})().catch(error => { console.error(error); process.exitCode = 1; });

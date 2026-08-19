@@ -2,7 +2,7 @@ const db = require('../database');
 
 const COMANDO = ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'];
 
-module.exports = function pilotoAprovado(req, res, next) {
+module.exports = async function pilotoAprovado(req, res, next) {
   const id = req.session?.user?.id;
 
   // Conta administrativa geral não possui um piloto associado.
@@ -10,7 +10,7 @@ module.exports = function pilotoAprovado(req, res, next) {
     return res.status(403).json({ erro: 'Esta função operacional exige uma conta de piloto ou de comando vinculada a um usuário.' });
   }
 
-  const user = db.get(
+  const user = await db.get(
     'SELECT id, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
     [id]
   );
@@ -26,7 +26,7 @@ module.exports = function pilotoAprovado(req, res, next) {
   // operacional integral, mesmo que a candidatura original não esteja
   // mais marcada como APROVADO.
   if (!eComando) {
-    const aprovado = db.get(
+    const aprovado = await db.get(
       "SELECT id FROM candidaturas WHERE usuario_id = ? AND status = 'APROVADO' LIMIT 1",
       [id]
     );

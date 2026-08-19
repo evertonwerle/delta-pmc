@@ -16,14 +16,14 @@ const CARGOS = [
   'PILOTO PROBATORIO'
 ];
 
-router.get('/permissoes', (req, res) => {
+router.get('/permissoes', async (req, res) => {
   const admin = !!req.session?.admin;
-  const autorizado = admin || hierarchyAuth.isHierarchyManager(req);
+  const autorizado = admin || await hierarchyAuth.isHierarchyManager(req);
   // Sempre derive o cargo atual do SQLite. Isso evita que uma sessão antiga
   // mantenha permissões desatualizadas depois de uma promoção/rebaixamento.
   const cargo = admin
     ? String(req.session.admin?.cargo || 'ADMINISTRADOR').trim().toUpperCase()
-    : hierarchyAuth.cargoAtual(req);
+    : await hierarchyAuth.cargoAtual(req);
   res.json({
     autorizado,
     admin,
@@ -32,8 +32,8 @@ router.get('/permissoes', (req, res) => {
   });
 });
 
-router.get('/', hierarchyAuth, (req, res) => {
-  const rows = db.all(`
+router.get('/', hierarchyAuth, async (req, res) => {
+  const rows = await db.all(`
     SELECT u.id, u.username, u.nome, u.cargo_delta, u.ativo, u.status_conta, u.criado_em, u.ultimo_login,
            COALESCE((SELECT c.status FROM candidaturas c WHERE c.usuario_id = u.id ORDER BY c.id DESC LIMIT 1), '') AS candidatura_status
     FROM users u
@@ -55,7 +55,7 @@ router.get('/', hierarchyAuth, (req, res) => {
   res.json({ cargos: CARGOS, usuarios: rows });
 });
 
-function salvarCargoUsuario(req, res) {
+async function salvarCargoUsuario(req, res) {
   const id = Number(req.params.id);
   const { cargo, ativo, justificativa } = req.body || {};
 
@@ -69,7 +69,7 @@ function salvarCargoUsuario(req, res) {
       return res.status(400).json({ sucesso: false, erro: `Cargo inválido: ${cargoNovo || '(vazio)'}.` });
     }
 
-    const user = db.get(
+    const user = await db.get(
       'SELECT id, username, nome, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
       [id]
     );
@@ -94,78 +94,62 @@ function salvarCargoUsuario(req, res) {
       ? { tipo: 'ADMINISTRADOR', id: Number(req.session.admin.id) || null, nome: req.session.admin.nome || req.session.admin.username || 'Administrador' }
       : { tipo: String(req.session.user?.cargo || 'COMANDO').trim().toUpperCase(), id: Number(req.session.user?.id) || null, nome: req.session.user?.nome || req.session.user?.username || 'Comando' };
 
-    // A alteração do cargo é feita dentro de uma transação. O histórico/log é
-    // secundário: se a auditoria falhar em um banco antigo, o cargo ainda é
-    // confirmado e persistido.
-    db.exec('BEGIN IMMEDIATE');
-    let committed = false;
-    try {
-      const update = db.run(
-        'UPDATE users SET cargo_delta = ?, ativo = ?, status_conta = ? WHERE id = ?',
-        [cargoNovo, novoAtivo, novoStatus, id]
-      );
+    // Turso/LibSQL usa uma API assíncrona e pode atender requisições por conexões
+    // diferentes. Por isso não simulamos BEGIN/COMMIT com chamadas separadas:
+    // o UPDATE principal é confirmado diretamente e a auditoria é secundária.
+    const update = await db.run(
+      'UPDATE users SET cargo_delta = ?, ativo = ?, status_conta = ? WHERE id = ?',
+      [cargoNovo, novoAtivo, novoStatus, id]
+    );
 
-      if (!update || Number(update.changes || 0) !== 1) {
-        throw new Error('O SQLite não confirmou a atualização do usuário.');
-      }
-
-      const confirmadoDentroDaTransacao = db.get(
-        'SELECT id, username, nome, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
-        [id]
-      );
-      if (!confirmadoDentroDaTransacao || String(confirmadoDentroDaTransacao.cargo_delta || '').trim().toUpperCase() !== cargoNovo) {
-        throw new Error('O SQLite não retornou o cargo solicitado após o UPDATE.');
-      }
-
-      // Auditoria isolada em SAVEPOINT para não invalidar o UPDATE principal.
-      db.exec('SAVEPOINT cargo_auditoria');
-      try {
-        if (cargoAnterior !== cargoNovo) {
-          db.run(
-            `INSERT INTO historico_cargos
-              (usuario_id,cargo_anterior,cargo_novo,justificativa,responsavel_tipo,responsavel_id)
-             VALUES (?,?,?,?,?,?)`,
-            [id, user.cargo_delta || null, cargoNovo, justificativaTexto, actor.tipo, actor.id]
-          );
-
-          db.run(
-            `INSERT INTO logs_sistema
-              (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes)
-             VALUES (?,?,?,?,?,?,?)`,
-            [actor.tipo, actor.id, actor.nome, 'ALTERAÇÃO DE CARGO', 'USUARIO', id,
-              `${user.cargo_delta || 'SEM CARGO'} → ${cargoNovo}${justificativaTexto ? `. ${justificativaTexto}` : ''}`]
-          );
-        }
-        if (Number(user.ativo) !== Number(novoAtivo)) {
-          db.run(
-            `INSERT INTO logs_sistema
-              (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes)
-             VALUES (?,?,?,?,?,?,?)`,
-            [actor.tipo, actor.id, actor.nome, 'ALTERAÇÃO DE STATUS', 'USUARIO', id, `Status: ${novoAtivo ? 'ATIVO' : 'INATIVO'}`]
-          );
-        }
-        db.exec('RELEASE cargo_auditoria');
-      } catch (auditError) {
-        console.error('[HIERARQUIA] Falha apenas na auditoria; cargo será mantido:', auditError);
-        try { db.exec('ROLLBACK TO cargo_auditoria'); } catch (_) {}
-        try { db.exec('RELEASE cargo_auditoria'); } catch (_) {}
-      }
-
-      db.exec('COMMIT');
-      committed = true;
-    } catch (txError) {
-      try { db.exec('ROLLBACK'); } catch (_) {}
-      throw txError;
+    if (!update || Number(update.changes || 0) !== 1) {
+      throw new Error('O banco de dados não confirmou a atualização do usuário.');
     }
 
-    if (!committed) throw new Error('A transação não foi confirmada.');
+    const confirmado = await db.get(
+      'SELECT id, username, nome, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
+      [id]
+    );
+    if (!confirmado || String(confirmado.cargo_delta || '').trim().toUpperCase() !== cargoNovo) {
+      throw new Error('O banco de dados não retornou o cargo solicitado após o UPDATE.');
+    }
 
-    const atualizado = db.get(
+    // Auditoria não impede a persistência do cargo.
+    try {
+      if (cargoAnterior !== cargoNovo) {
+        await db.run(
+          `INSERT INTO historico_cargos
+            (usuario_id,cargo_anterior,cargo_novo,justificativa,responsavel_tipo,responsavel_id)
+           VALUES (?,?,?,?,?,?)`,
+          [id, user.cargo_delta || null, cargoNovo, justificativaTexto, actor.tipo, actor.id]
+        );
+
+        await db.run(
+          `INSERT INTO logs_sistema
+            (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes)
+           VALUES (?,?,?,?,?,?,?)`,
+          [actor.tipo, actor.id, actor.nome, 'ALTERAÇÃO DE CARGO', 'USUARIO', id,
+            `${user.cargo_delta || 'SEM CARGO'} → ${cargoNovo}${justificativaTexto ? `. ${justificativaTexto}` : ''}`]
+        );
+      }
+      if (Number(user.ativo) !== Number(novoAtivo)) {
+        await db.run(
+          `INSERT INTO logs_sistema
+            (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes)
+           VALUES (?,?,?,?,?,?,?)`,
+          [actor.tipo, actor.id, actor.nome, 'ALTERAÇÃO DE STATUS', 'USUARIO', id, `Status: ${novoAtivo ? 'ATIVO' : 'INATIVO'}`]
+        );
+      }
+    } catch (auditError) {
+      console.error('[HIERARQUIA] Falha apenas na auditoria; cargo foi mantido:', auditError);
+    }
+
+    const atualizado = await db.get(
       'SELECT id, username, nome, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
       [id]
     );
     if (!atualizado || String(atualizado.cargo_delta || '').trim().toUpperCase() !== cargoNovo) {
-      return res.status(500).json({ sucesso: false, erro: 'A alteração não pôde ser confirmada após o COMMIT.' });
+      return res.status(500).json({ sucesso: false, erro: 'A alteração não pôde ser confirmada após a gravação.' });
     }
 
     return res.json({
@@ -187,10 +171,10 @@ router.patch('/usuarios/:id', hierarchyAuth, salvarCargoUsuario);
 router.put('/usuarios/:id/cargo', hierarchyAuth, salvarCargoUsuario);
 router.post('/usuarios/:id/cargo', hierarchyAuth, salvarCargoUsuario);
 
-router.get('/usuarios/:id/cargo', hierarchyAuth, (req, res) => {
+router.get('/usuarios/:id/cargo', hierarchyAuth, async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const usuario = db.get(
+    const usuario = await db.get(
       'SELECT id, username, nome, cargo_delta, ativo, status_conta FROM users WHERE id = ? LIMIT 1',
       [id]
     );
@@ -202,15 +186,15 @@ router.get('/usuarios/:id/cargo', hierarchyAuth, (req, res) => {
   }
 });
 
-function canManageApprovedPilot(req) {
+async function canManageApprovedPilot(req) {
   if (req.session?.admin) return true;
-  const cargo = hierarchyAuth.cargoAtual(req);
+  const cargo = await hierarchyAuth.cargoAtual(req);
   return ['GESTOR', 'SUB-GESTOR'].includes(cargo);
 }
 
-router.patch('/usuarios/:id/exonerar', (req, res) => {
+router.patch('/usuarios/:id/exonerar', async (req, res) => {
   try {
-    if (!canManageApprovedPilot(req)) {
+    if (!await canManageApprovedPilot(req)) {
       return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem exonerar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
@@ -220,7 +204,7 @@ router.patch('/usuarios/:id/exonerar', (req, res) => {
     if (!niveis.includes(nivel)) return res.status(400).json({ erro: 'Selecione um nível de exoneração válido.' });
     if (motivo.length < 3) return res.status(400).json({ erro: 'Informe o motivo/detalhamento da exoneração.' });
 
-    const user = db.get(`
+    const user = await db.get(`
       SELECT u.id, u.nome, u.username, u.cargo_delta, u.ativo,
              (SELECT c.status FROM candidaturas c WHERE c.usuario_id = u.id ORDER BY c.id DESC LIMIT 1) AS candidatura_status
       FROM users u WHERE u.id = ? LIMIT 1
@@ -233,7 +217,7 @@ router.patch('/usuarios/:id/exonerar', (req, res) => {
       return res.status(400).json({ erro: 'Contas de comando não podem ser exoneradas por esta função.' });
     }
 
-    db.run(`
+    await db.run(`
       INSERT INTO exoneracoes
       (usuario_id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, responsavel_id, ocorrido_em)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
@@ -246,12 +230,12 @@ router.patch('/usuarios/:id/exonerar', (req, res) => {
 
     // Fecha a candidatura aprovada atual sem apagar o histórico. Assim, o
     // exonerado poderá iniciar um novo edital no futuro.
-    const candidaturaAtual = db.get(
+    const candidaturaAtual = await db.get(
       `SELECT * FROM candidaturas WHERE usuario_id = ? AND status = 'APROVADO' ORDER BY id DESC LIMIT 1`,
       [id]
     );
     if (candidaturaAtual) {
-      db.run(`
+      await db.run(`
         INSERT INTO candidaturas_historico
         (candidatura_id, usuario_id, personagem, id_jogador, patente, tempo_pmc, idade_ic, disponibilidade, experiencia, motivo, etapa, etapa_liberada, status, observacao, responsavel_id, criado_em)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'EXONERADO', ?, ?, ?)
@@ -262,10 +246,10 @@ router.patch('/usuarios/:id/exonerar', (req, res) => {
         candidaturaAtual.etapa || 3, candidaturaAtual.etapa_liberada || 3,
         `Exonerado — ${nivel}: ${motivo}`, req.session.admin?.id ?? null, candidaturaAtual.criado_em || null
       ]);
-      db.run('DELETE FROM candidaturas WHERE id = ?', [candidaturaAtual.id]);
+      await db.run('DELETE FROM candidaturas WHERE id = ?', [candidaturaAtual.id]);
     }
 
-    db.run(`UPDATE users SET ativo = 0, status_conta = 'EXONERADO', inscricao_enviada = 0 WHERE id = ?`, [id]);
+    await db.run(`UPDATE users SET ativo = 0, status_conta = 'EXONERADO', inscricao_enviada = 0 WHERE id = ?`, [id]);
     res.json({
       sucesso: true,
       mensagem: `${user.nome} foi exonerado. A conta permanece registrada e poderá retornar ao processo seletivo no futuro.`,
@@ -279,28 +263,28 @@ router.patch('/usuarios/:id/exonerar', (req, res) => {
 });
 
 
-router.patch('/usuarios/:id/banir', (req,res)=>{
+router.patch('/usuarios/:id/banir', async (req,res)=>{
   try{
-    if(!canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem banir permanentemente.'});
+    if(!await canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem banir permanentemente.'});
     const id=Number(req.params.id), motivo=String(req.body?.motivo||'').trim();
     if(motivo.length<3) return res.status(400).json({erro:'Informe o motivo do banimento.'});
-    const u=db.get(`SELECT id,nome,username,cargo_delta FROM users WHERE id=?`,[id]); if(!u)return res.status(404).json({erro:'Usuário não encontrado.'});
-    db.run(`INSERT INTO exoneracoes (usuario_id,nome,username,cargo_no_momento,nivel,motivo,responsavel_tipo,responsavel_id) VALUES (?,?,?,?,?,?,?,?)`,[u.id,u.nome,u.username,u.cargo_delta||'PILOTO','BANIMENTO_PERMANENTE',motivo,req.session.admin?'ADMIN':String(req.session.user?.cargo||'GESTOR').toUpperCase(),req.session.admin?.id??req.session.user?.id??null]);
-    db.run(`UPDATE users SET ativo=0,status_conta='BANIDO',inscricao_enviada=0 WHERE id=?`,[id]);
+    const u=await db.get(`SELECT id,nome,username,cargo_delta FROM users WHERE id=?`,[id]); if(!u)return res.status(404).json({erro:'Usuário não encontrado.'});
+    await db.run(`INSERT INTO exoneracoes (usuario_id,nome,username,cargo_no_momento,nivel,motivo,responsavel_tipo,responsavel_id) VALUES (?,?,?,?,?,?,?,?)`,[u.id,u.nome,u.username,u.cargo_delta||'PILOTO','BANIMENTO_PERMANENTE',motivo,req.session.admin?'ADMIN':String(req.session.user?.cargo||'GESTOR').toUpperCase(),req.session.admin?.id??req.session.user?.id??null]);
+    await db.run(`UPDATE users SET ativo=0,status_conta='BANIDO',inscricao_enviada=0 WHERE id=?`,[id]);
     const r=req.session.admin?{tipo:'ADMINISTRADOR',id:req.session.admin.id,nome:req.session.admin.nome}: {tipo:String(req.session.user?.cargo||'GESTOR').toUpperCase(),id:req.session.user?.id,nome:req.session.user?.nome};
-    db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`,[r.tipo,r.id,r.nome,'BANIMENTO PERMANENTE','USUARIO',id,motivo]);
+    await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`,[r.tipo,r.id,r.nome,'BANIMENTO PERMANENTE','USUARIO',id,motivo]);
     res.json({sucesso:true,mensagem:`${u.nome} foi banido permanentemente.`});
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível banir o usuário.'});}
 });
 
-router.get('/usuarios/:id/exoneracoes', (req, res) => {
+router.get('/usuarios/:id/exoneracoes', async (req, res) => {
   try {
-    if (!canManageApprovedPilot(req)) return res.status(403).json({ erro: 'Sem permissão.' });
-    const rows = db.all(`
+    if (!await canManageApprovedPilot(req)) return res.status(403).json({ erro: 'Sem permissão.' });
+    const rows = await db.all(`
       SELECT id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, ocorrido_em
       FROM exoneracoes WHERE usuario_id = ? ORDER BY id DESC
     `, [Number(req.params.id)]);
-    const retornos = db.all(`
+    const retornos = await db.all(`
       SELECT id, exoneracao_id, candidatura_id, iniciado_em, status
       FROM retornos_atividade WHERE usuario_id = ? ORDER BY id DESC
     `, [Number(req.params.id)]);
@@ -311,13 +295,13 @@ router.get('/usuarios/:id/exoneracoes', (req, res) => {
   }
 });
 
-router.delete('/usuarios/:id', (req, res) => {
+router.delete('/usuarios/:id', async (req, res) => {
   try {
-    if (!canManageApprovedPilot(req)) {
+    if (!await canManageApprovedPilot(req)) {
       return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem deletar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
-    const user = db.get(`
+    const user = await db.get(`
       SELECT u.id, u.nome, u.cargo_delta,
              (SELECT c.status FROM candidaturas c WHERE c.usuario_id = u.id ORDER BY c.id DESC LIMIT 1) AS candidatura_status
       FROM users u WHERE u.id = ? LIMIT 1
@@ -332,7 +316,7 @@ router.delete('/usuarios/:id', (req, res) => {
     if (['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(user.cargo_delta || '').toUpperCase())) {
       return res.status(400).json({ erro: 'Contas de comando não podem ser deletadas por esta função.' });
     }
-    const result = db.run('DELETE FROM users WHERE id = ?', [id]);
+    const result = await db.run('DELETE FROM users WHERE id = ?', [id]);
     if (Number(result?.changes || 0) !== 1) return res.status(409).json({ erro: 'A conta não pôde ser removida do banco de dados.' });
     res.json({ sucesso: true, mensagem: `${user.nome} foi removido permanentemente.` });
   } catch (error) {

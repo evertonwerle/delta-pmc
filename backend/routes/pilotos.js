@@ -7,9 +7,9 @@ const router = express.Router();
 // Dados operacionais destinados exclusivamente ao Comando.
 // Inclui apenas pilotos que já foram aprovados no processo seletivo,
 // excluindo GESTOR, SUB-GESTOR e COORDENADOR da lista de pilotos.
-router.get('/', hierarchyAuth, (req, res) => {
+router.get('/', hierarchyAuth, async (req, res) => {
   try {
-    const rows = db.all(`
+    const rows = await db.all(`
       SELECT
         u.id,
         u.username,
@@ -80,9 +80,9 @@ router.get('/', hierarchyAuth, (req, res) => {
   }
 });
 
-router.get('/desempenho/resumo', hierarchyAuth, (req,res)=>{
+router.get('/desempenho/resumo', hierarchyAuth, async (req,res)=>{
   try{
-    const rows=db.all(`
+    const rows=await db.all(`
       SELECT u.id,u.nome,u.cargo_delta
       FROM users u
       JOIN candidaturas c ON c.id=(SELECT c2.id FROM candidaturas c2 WHERE c2.usuario_id=u.id AND c2.status='APROVADO' ORDER BY c2.id DESC LIMIT 1)
@@ -103,35 +103,35 @@ router.get('/desempenho/resumo', hierarchyAuth, (req,res)=>{
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível calcular o desempenho.'});}
 });
 
-router.post('/:id/avaliacoes', hierarchyAuth, (req,res)=>{
+router.post('/:id/avaliacoes', hierarchyAuth, async (req,res)=>{
   try{
     const id=Number(req.params.id), nota=Number(req.body?.nota), observacao=String(req.body?.observacao||'').trim();
     if(!Number.isInteger(id)||id<=0||nota<1||nota>10) return res.status(400).json({erro:'Piloto ou nota inválidos.'});
-    const exists=db.get(`SELECT id FROM users WHERE id=? AND ativo=1`,[id]);
+    const exists=await db.get(`SELECT id FROM users WHERE id=? AND ativo=1`,[id]);
     if(!exists) return res.status(404).json({erro:'Piloto não encontrado.'});
     const r=responsavel(req);
-    db.run(`INSERT INTO avaliacoes_pilotos(usuario_id,nota,observacao,responsavel_tipo,responsavel_id) VALUES(?,?,?,?,?)`,[id,nota,observacao,r.tipo,r.id]);
+    await db.run(`INSERT INTO avaliacoes_pilotos(usuario_id,nota,observacao,responsavel_tipo,responsavel_id) VALUES(?,?,?,?,?)`,[id,nota,observacao,r.tipo,r.id]);
     res.json({sucesso:true});
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível registrar a avaliação.'});}
 });
 
-router.post('/:id/ocorrencias', hierarchyAuth, (req,res)=>{
+router.post('/:id/ocorrencias', hierarchyAuth, async (req,res)=>{
   try{
     const id=Number(req.params.id), nivel=String(req.body?.nivel||'LEVE').toUpperCase(), motivo=String(req.body?.motivo||'').trim(), observacao=String(req.body?.observacao||'').trim();
     if(!Number.isInteger(id)||id<=0||!['LEVE','MEDIA','GRAVE'].includes(nivel)||!motivo) return res.status(400).json({erro:'Preencha nível e motivo.'});
-    const exists=db.get(`SELECT id FROM users WHERE id=? AND ativo=1`,[id]);
+    const exists=await db.get(`SELECT id FROM users WHERE id=? AND ativo=1`,[id]);
     if(!exists) return res.status(404).json({erro:'Piloto não encontrado.'});
     const r=responsavel(req);
-    db.run(`INSERT INTO ocorrencias_pilotos(usuario_id,nivel,motivo,observacao,responsavel_tipo,responsavel_id) VALUES(?,?,?,?,?,?)`,[id,nivel,motivo,observacao,r.tipo,r.id]);
+    await db.run(`INSERT INTO ocorrencias_pilotos(usuario_id,nivel,motivo,observacao,responsavel_tipo,responsavel_id) VALUES(?,?,?,?,?,?)`,[id,nivel,motivo,observacao,r.tipo,r.id]);
     res.json({sucesso:true});
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível registrar a ocorrência.'});}
 });
 
 
 
-router.get('/apreensoes', hierarchyAuth, (req,res)=>{
+router.get('/apreensoes', hierarchyAuth, async (req,res)=>{
   try{
-    const rows=db.all(`
+    const rows=await db.all(`
       SELECT a.id,a.usuario_id,a.ocorrencia,a.id_pessoa,a.imagem_url,a.observacoes,a.criado_em,
              u.nome,u.username,u.cargo_delta,
              c.personagem,c.id_jogador
@@ -149,11 +149,11 @@ router.get('/apreensoes', hierarchyAuth, (req,res)=>{
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível carregar as apreensões.'});}
 });
 
-router.get('/apreensoes/:id', hierarchyAuth, (req,res)=>{
+router.get('/apreensoes/:id', hierarchyAuth, async (req,res)=>{
   try{
     const id=Number(req.params.id);
     if(!Number.isInteger(id)||id<=0) return res.status(400).json({erro:'Apreensão inválida.'});
-    const row=db.get(`
+    const row=await db.get(`
       SELECT a.id,a.usuario_id,a.ocorrencia,a.id_pessoa,a.imagem_url,a.observacoes,a.criado_em,
              u.nome,u.username,u.cargo_delta,
              c.personagem,c.id_jogador
@@ -171,12 +171,12 @@ router.get('/apreensoes/:id', hierarchyAuth, (req,res)=>{
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível carregar a apreensão.'});}
 });
 
-router.get('/:id', hierarchyAuth, (req, res) => {
+router.get('/:id', hierarchyAuth, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ erro: 'Piloto inválido.' });
 
-    const piloto = db.get(`
+    const piloto = await db.get(`
       SELECT
         u.id, u.username, u.nome, u.cargo_delta, u.ativo, u.criado_em, u.ultimo_login,
         c.id AS candidatura_id, c.personagem, c.id_jogador, c.patente, c.tempo_pmc,
@@ -196,7 +196,7 @@ router.get('/:id', hierarchyAuth, (req, res) => {
 
     if (!piloto) return res.status(404).json({ erro: 'Piloto aprovado não encontrado.' });
 
-    const pontos = db.all(`
+    const pontos = await db.all(`
       SELECT id, entrada, saida,
         ROUND(CASE
           WHEN saida IS NULL THEN (julianday('now') - julianday(entrada)) * 86400.0
@@ -207,20 +207,20 @@ router.get('/:id', hierarchyAuth, (req, res) => {
       ORDER BY id DESC
     `, [id]);
 
-    const apreensoes = db.all(`
+    const apreensoes = await db.all(`
       SELECT id, ocorrencia, id_pessoa, imagem_url, observacoes, criado_em
       FROM apreensoes WHERE usuario_id = ? ORDER BY id DESC
     `, [id]);
 
-    const fardamento = db.get(`SELECT * FROM fardamentos WHERE usuario_id = ? LIMIT 1`, [id]) || {
+    const fardamento = await db.get(`SELECT * FROM fardamentos WHERE usuario_id = ? LIMIT 1`, [id]) || {
       usuario_id: id, uniforme: 0, colete: 0, distintivo: 0, equipamento: 0, observacoes: '', atualizado_em: null
     };
 
     const totalSegundos = pontos.reduce((sum, p) => sum + Number(p.segundos || 0), 0);
     const totalApreensoes = apreensoes.length;
     const itensApreendidos = 0;
-    const avaliacoes = db.all(`SELECT id, nota, observacao, responsavel_tipo, criado_em FROM avaliacoes_pilotos WHERE usuario_id=? ORDER BY id DESC`, [id]);
-    const ocorrencias = db.all(`SELECT id, nivel, motivo, observacao, responsavel_tipo, criado_em FROM ocorrencias_pilotos WHERE usuario_id=? ORDER BY id DESC`, [id]);
+    const avaliacoes = await db.all(`SELECT id, nota, observacao, responsavel_tipo, criado_em FROM avaliacoes_pilotos WHERE usuario_id=? ORDER BY id DESC`, [id]);
+    const ocorrencias = await db.all(`SELECT id, nivel, motivo, observacao, responsavel_tipo, criado_em FROM ocorrencias_pilotos WHERE usuario_id=? ORDER BY id DESC`, [id]);
     const notaMedia = avaliacoes.length ? avaliacoes.reduce((a,x)=>a+Number(x.nota||0),0)/avaliacoes.length : 0;
     const desempenho = calcularDesempenho({
       segundos: totalSegundos,
@@ -306,14 +306,14 @@ function calcularDesempenho({segundos=0, apreensoes=0, dias=0, nota=0, ocorrenci
   };
 }
 
-function obterMetricas(id) {
-  const pontos = db.all(`SELECT entrada, saida,
+async function obterMetricas(id) {
+  const pontos = await db.all(`SELECT entrada, saida,
     ROUND(CASE WHEN saida IS NULL THEN (julianday('now')-julianday(entrada))*86400.0
     ELSE (julianday(saida)-julianday(entrada))*86400.0 END,0) segundos
     FROM pontos WHERE usuario_id=?`, [id]);
-  const apre = db.all(`SELECT * FROM apreensoes WHERE usuario_id=?`, [id]);
-  const aval = db.get(`SELECT nota FROM avaliacoes_pilotos WHERE usuario_id=? ORDER BY id DESC LIMIT 1`, [id]);
-  const ocorr = db.all(`SELECT nivel FROM ocorrencias_pilotos WHERE usuario_id=?`, [id]);
+  const apre = await db.all(`SELECT * FROM apreensoes WHERE usuario_id=?`, [id]);
+  const aval = await db.get(`SELECT nota FROM avaliacoes_pilotos WHERE usuario_id=? ORDER BY id DESC LIMIT 1`, [id]);
+  const ocorr = await db.all(`SELECT nivel FROM ocorrencias_pilotos WHERE usuario_id=?`, [id]);
   const segundos = pontos.reduce((a,p)=>a+Math.max(0,Number(p.segundos||0)),0);
   const dias = new Set(pontos.map(p=>String(p.entrada||'').slice(0,10))).size;
   const total = apre.length;

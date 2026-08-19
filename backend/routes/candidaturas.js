@@ -5,17 +5,17 @@ const login = require('../middleware/login');
 
 const router = express.Router();
 
-router.post('/', login.requireUser, (req, res) => {
+router.post('/', login.requireUser, async (req, res) => {
   try {
     const { personagem, id_jogador, patente, idade_ic, disponibilidade, experiencia, motivo } = req.body || {};
     if (!personagem || !id_jogador) return res.status(400).json({ erro: 'Personagem e ID são obrigatórios.' });
 
-    const usuario = db.get('SELECT id, inscricao_enviada, ativo, status_conta FROM users WHERE id = ? LIMIT 1', [req.session.user.id]);
+    const usuario = await db.get('SELECT id, inscricao_enviada, ativo, status_conta FROM users WHERE id = ? LIMIT 1', [req.session.user.id]);
     if (!usuario) return res.status(401).json({ erro: 'Usuário não encontrado.' });
     const statusConta = String(usuario.status_conta || '').toUpperCase();
     if (statusConta === 'BANIDO') return res.status(403).json({ erro: 'Esta conta foi banida permanentemente e não pode retornar ao processo seletivo.' });
 
-    const existente = db.get(
+    const existente = await db.get(
       `SELECT id FROM candidaturas
        WHERE usuario_id = ? AND COALESCE(UPPER(status),'PENDENTE') IN ('PENDENTE','APROVADO')
        ORDER BY id DESC LIMIT 1`,
@@ -23,26 +23,26 @@ router.post('/', login.requireUser, (req, res) => {
     );
     if (existente) return res.status(409).json({ erro: 'Sua conta já possui uma candidatura ativa.' });
 
-    db.run(
+    await db.run(
       `INSERT INTO candidaturas
        (usuario_id, personagem, id_jogador, patente, idade_ic, disponibilidade, experiencia, motivo, etapa, etapa_liberada)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
       [req.session.user.id, personagem, id_jogador, patente || null, idade_ic || null, disponibilidade || null, experiencia || null, motivo || null]
     );
-    const novoId = Number(db.get('SELECT last_insert_rowid() AS id').id);
+    const novoId = Number(await db.get('SELECT last_insert_rowid() AS id').id);
     // Se a pessoa estava exonerada, registra formalmente o retorno ao processo seletivo.
-    const exoneracaoAnterior = db.get(
+    const exoneracaoAnterior = await db.get(
       `SELECT id FROM exoneracoes WHERE usuario_id = ? ORDER BY id DESC LIMIT 1`,
       [req.session.user.id]
     );
     if (exoneracaoAnterior) {
-      db.run(
+      await db.run(
         `INSERT INTO retornos_atividade (usuario_id, exoneracao_id, candidatura_id, status)
          VALUES (?, ?, ?, 'NOVA_INSCRICAO')`,
         [req.session.user.id, exoneracaoAnterior.id, novoId]
       );
     }
-    db.run(`UPDATE users SET inscricao_enviada = 1, ativo = 1, status_conta = 'ATIVA' WHERE id = ?`, [req.session.user.id]);
+    await db.run(`UPDATE users SET inscricao_enviada = 1, ativo = 1, status_conta = 'ATIVA' WHERE id = ?`, [req.session.user.id]);
     res.status(201).json({ sucesso: true, mensagem: exoneracaoAnterior ? 'Nova candidatura enviada. O retorno à ativa foi registrado e o histórico de exoneração foi preservado.' : 'Candidatura enviada com sucesso.' });
   } catch (error) {
     console.error(error);
@@ -50,20 +50,20 @@ router.post('/', login.requireUser, (req, res) => {
   }
 });
 
-router.get('/minha', login.requireUser, (req, res) => {
-  const user = db.get('SELECT inscricao_enviada FROM users WHERE id = ? LIMIT 1', [req.session.user.id]);
-  const row = db.get('SELECT * FROM candidaturas WHERE usuario_id = ? ORDER BY id DESC LIMIT 1', [req.session.user.id]);
+router.get('/minha', login.requireUser, async (req, res) => {
+  const user = await db.get('SELECT inscricao_enviada FROM users WHERE id = ? LIMIT 1', [req.session.user.id]);
+  const row = await db.get('SELECT * FROM candidaturas WHERE usuario_id = ? ORDER BY id DESC LIMIT 1', [req.session.user.id]);
   if (!row) return res.json({ encontrada: false, inscricao_enviada: Number(user?.inscricao_enviada || 0) === 1, etapa_liberada: 0 });
   res.json({ encontrada: true, inscricao_enviada: true, ...row });
 });
 
-router.get('/status/:id_jogador', login, (req, res) => {
+router.get('/status/:id_jogador', login, async (req, res) => {
   try {
     let row;
     if (req.session.admin) {
-      row = db.get('SELECT personagem, id_jogador, etapa_liberada, status FROM candidaturas WHERE id_jogador = ? ORDER BY id DESC LIMIT 1', [req.params.id_jogador]);
+      row = await db.get('SELECT personagem, id_jogador, etapa_liberada, status FROM candidaturas WHERE id_jogador = ? ORDER BY id DESC LIMIT 1', [req.params.id_jogador]);
     } else {
-      row = db.get('SELECT personagem, id_jogador, etapa_liberada, status FROM candidaturas WHERE usuario_id = ? AND id_jogador = ? ORDER BY id DESC LIMIT 1', [req.session.user.id, req.params.id_jogador]);
+      row = await db.get('SELECT personagem, id_jogador, etapa_liberada, status FROM candidaturas WHERE usuario_id = ? AND id_jogador = ? ORDER BY id DESC LIMIT 1', [req.session.user.id, req.params.id_jogador]);
     }
     if (!row) return res.status(404).json({ encontrado: false, etapa_liberada: 0 });
     res.json({ encontrado: true, personagem: row.personagem, etapa_liberada: row.etapa_liberada || 0, status: row.status });
@@ -73,10 +73,10 @@ router.get('/status/:id_jogador', login, (req, res) => {
   }
 });
 
-router.get('/', adminAuth, (req, res) => {
+router.get('/', adminAuth, async (req, res) => {
   // O painel de fases mostra somente candidatos que ainda não ocupam
   // cargos de comando (GESTOR, SUB-GESTOR ou COORDENADOR).
-  const rows = db.all(`
+  const rows = await db.all(`
     SELECT c.*, u.nome AS usuario_nome, u.username AS usuario_username, u.cargo_delta
     FROM candidaturas c
     LEFT JOIN users u ON u.id = c.usuario_id
@@ -87,10 +87,10 @@ router.get('/', adminAuth, (req, res) => {
   res.json(rows);
 });
 
-router.patch('/:id', adminAuth, (req, res) => {
+router.patch('/:id', adminAuth, async (req, res) => {
   try {
     const { etapa, status, observacao } = req.body || {};
-    const atual = db.get('SELECT * FROM candidaturas WHERE id = ?', [req.params.id]);
+    const atual = await db.get('SELECT * FROM candidaturas WHERE id = ?', [req.params.id]);
     if (!atual) return res.status(404).json({ erro: 'Candidatura não encontrada.' });
 
     let novaEtapaLiberada = atual.etapa_liberada || 0;
@@ -115,13 +115,13 @@ router.patch('/:id', adminAuth, (req, res) => {
     // responsavel_id aponta para admins; gestores são usuários comuns. Mantemos o responsável anterior.
     const responsavelId = req.session.admin?.id ?? null; // responsavel_id referencia admins; gestores entram nos logs como usuários
     const responsavelNome = req.session.admin?.nome || req.session.user?.nome || req.session.admin?.username || req.session.user?.username || 'Sistema';
-    db.run(
+    await db.run(
       `UPDATE candidaturas SET etapa_liberada = ?, etapa = ?, status = ?, observacao = COALESCE(?, observacao), responsavel_id = COALESCE(?, responsavel_id), atualizado_em = datetime('now') WHERE id = ?`,
       [novaEtapaLiberada, novaEtapaLiberada, novoStatus, observacao ?? null, responsavelId, req.params.id]
     );
     try {
       const acao = novoStatus === 'APROVADO' ? 'APROVACAO_CANDIDATURA' : novoStatus === 'REPROVADO' ? 'REPROVACAO_CANDIDATURA' : 'LIBERACAO_ETAPA';
-      db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`, [
+      await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`, [
         String(req.session.admin?.cargo || req.session.user?.cargo || req.session.user?.cargo_delta || 'ADMINISTRADOR').toUpperCase(),
         responsavelId, responsavelNome, acao, 'CANDIDATURA', req.params.id,
         `Candidato ${atual.personagem || atual.id_jogador}: etapa ${atual.etapa_liberada || 0} -> ${novaEtapaLiberada}${novoStatus !== atual.status ? `; status ${atual.status || 'PENDENTE'} -> ${novoStatus}` : ''}`
@@ -130,13 +130,13 @@ router.patch('/:id', adminAuth, (req, res) => {
 
     // Somente após 3 etapas + aprovação final o usuário vira PILOTO PROBATORIO.
     if (novaEtapaLiberada >= 3 && novoStatus === 'APROVADO' && atual.usuario_id) {
-      db.run(`UPDATE users SET cargo_delta = 'PILOTO PROBATORIO', ativo = 1, status_conta = 'ATIVA', inscricao_enviada = 1 WHERE id = ?`, [atual.usuario_id]);
+      await db.run(`UPDATE users SET cargo_delta = 'PILOTO PROBATORIO', ativo = 1, status_conta = 'ATIVA', inscricao_enviada = 1 WHERE id = ?`, [atual.usuario_id]);
     }
 
     // Reprovação encerra a candidatura ativa e libera o usuário para uma nova inscrição.
     // Mantemos o registro no histórico para o Comando não perder a informação da decisão.
     if (novoStatus === 'REPROVADO') {
-      db.run(`
+      await db.run(`
         INSERT INTO candidaturas_historico
         (candidatura_id, usuario_id, personagem, id_jogador, patente, tempo_pmc, idade_ic, disponibilidade, experiencia, motivo, etapa, etapa_liberada, status, observacao, responsavel_id, criado_em)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REPROVADO', ?, ?, ?)
@@ -146,10 +146,10 @@ router.patch('/:id', adminAuth, (req, res) => {
         atual.experiencia || null, atual.motivo || null, novaEtapaLiberada, novaEtapaLiberada,
         observacao ?? atual.observacao ?? null, req.session.admin?.id ?? null, atual.criado_em || null
       ]);
-      const del = db.run('DELETE FROM candidaturas WHERE id = ?', [req.params.id]);
+      const del = await db.run('DELETE FROM candidaturas WHERE id = ?', [req.params.id]);
       if (Number(del?.changes || 0) !== 1) return res.status(409).json({ erro: 'A candidatura não pôde ser removida do banco de dados.' });
       if (atual.usuario_id) {
-        db.run('UPDATE users SET inscricao_enviada = 0 WHERE id = ?', [atual.usuario_id]);
+        await db.run('UPDATE users SET inscricao_enviada = 0 WHERE id = ?', [atual.usuario_id]);
       }
       return res.json({ sucesso: true, reprovado: true, novaInscricaoLiberada: true, mensagem: 'Candidato reprovado e removido das candidaturas. O usuário pode realizar uma nova inscrição.' });
     }
@@ -161,12 +161,12 @@ router.patch('/:id', adminAuth, (req, res) => {
   }
 });
 
-router.delete('/:id', adminAuth, (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const atual = db.get('SELECT id FROM candidaturas WHERE id = ?', [req.params.id]);
+    const atual = await db.get('SELECT id FROM candidaturas WHERE id = ?', [req.params.id]);
     if (!atual) return res.status(404).json({ erro: 'Candidatura não encontrada.' });
-    const full = db.get('SELECT * FROM candidaturas WHERE id = ?', [req.params.id]);
-    db.run(`
+    const full = await db.get('SELECT * FROM candidaturas WHERE id = ?', [req.params.id]);
+    await db.run(`
       INSERT INTO candidaturas_historico
       (candidatura_id, usuario_id, personagem, id_jogador, patente, tempo_pmc, idade_ic, disponibilidade, experiencia, motivo, etapa, etapa_liberada, status, observacao, responsavel_id, criado_em)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DELETADA', ?, ?, ?)
@@ -175,9 +175,9 @@ router.delete('/:id', adminAuth, (req, res) => {
       full.idade_ic || null, full.disponibilidade || null, full.experiencia || null, full.motivo || null,
       full.etapa || 0, full.etapa_liberada || 0, full.observacao || null, req.session.admin?.id ?? null, full.criado_em || null
     ]);
-    const del = db.run('DELETE FROM candidaturas WHERE id = ?', [req.params.id]);
+    const del = await db.run('DELETE FROM candidaturas WHERE id = ?', [req.params.id]);
     if (Number(del?.changes || 0) !== 1) return res.status(409).json({ erro: 'A candidatura não pôde ser removida do banco de dados.' });
-    if (full.usuario_id) db.run('UPDATE users SET inscricao_enviada = 0 WHERE id = ?', [full.usuario_id]);
+    if (full.usuario_id) await db.run('UPDATE users SET inscricao_enviada = 0 WHERE id = ?', [full.usuario_id]);
     res.json({ sucesso: true, novaInscricaoLiberada: true, mensagem: 'Candidatura deletada. O usuário foi liberado para realizar uma nova inscrição.' });
   } catch (error) {
     console.error(error);

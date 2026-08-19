@@ -1,21 +1,70 @@
 # DELTA — Vercel + Turso
 
-Esta versão foi preparada para o deploy, mas existe uma distinção importante: o código atual do DELTA usa a API síncrona `node:sqlite`. Apenas adicionar `TURSO_DATABASE_URL` não troca automaticamente o banco para Turso.
+Esta versão está preparada para usar **Turso de verdade** em produção.
 
-## Já preparado
-- entrypoint `api/index.js` para a Vercel;
-- `vercel.json`;
-- variáveis de ambiente documentadas;
-- SQLite de produção limpo em `data/delta.sqlite`;
-- somente o Administrador Geral preservado;
-- `.gitignore` para não publicar `.env` e SQLite;
-- script de importação inicial para Turso.
+## O que foi alterado
 
-## Antes de produção real
-A camada de banco precisa ser migrada de `node:sqlite` síncrono para `@libsql/client`/Turso (ou outro banco serverless). As rotas atuais são síncronas e fazem chamadas como `db.get`, `db.all` e `db.run`; não é seguro fingir que elas já usam Turso remoto.
+- `backend/database.js` agora usa `@libsql/client` quando `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` estão definidos.
+- O mesmo código continua funcionando localmente com SQLite (`node:sqlite`) quando essas variáveis não existem.
+- As rotas foram convertidas de `db.get/db.all/db.run/db.exec` síncronos para operações com `await`.
+- O Express foi atualizado para a linha 5.x, permitindo middlewares assíncronos.
+- O banco cria/verifica o schema automaticamente ao iniciar.
+- As sessões do `express-session` agora são persistidas na tabela `sessions`, evitando depender do MemoryStore em funções serverless da Vercel.
+- `api/index.js` continua sendo o entrypoint da Vercel.
+- `vercel.json` encaminha as rotas para o Express.
+- `database/migrate-to-turso.js` faz a importação do SQLite local para o Turso.
 
-## Administrador inicial
-Usuário: `admin`
-Senha: a mesma senha do Administrador Geral existente na V43/arquivo original.
+## Variáveis da Vercel
 
-Troque a senha imediatamente ao colocar em produção.
+Configure no projeto da Vercel:
+
+- `TURSO_DATABASE_URL` — URL `libsql://...` do banco Turso.
+- `TURSO_AUTH_TOKEN` — token do banco Turso.
+- `SESSION_SECRET` — uma chave longa e aleatória para assinar as sessões.
+- `NODE_ENV=production` — recomendado para o ambiente de produção.
+
+**Nunca coloque o `TURSO_AUTH_TOKEN` no código ou no Git.**
+
+## Migrar o banco local para o Turso
+
+Antes de publicar, defina localmente:
+
+```bash
+export TURSO_DATABASE_URL="libsql://SEU-BANCO.turso.io"
+export TURSO_AUTH_TOKEN="SEU_TOKEN"
+```
+
+Depois execute:
+
+```bash
+node database/migrate-to-turso.js
+```
+
+O script copia as tabelas e os registros do SQLite ativo para o Turso em lotes.
+
+Se o projeto tiver mais de um SQLite em `data/`, informe explicitamente o banco desejado:
+
+```bash
+export DELTA_DB_PATH="delta.sqlite"
+node database/migrate-to-turso.js
+```
+
+## Deploy
+
+1. Faça o push do projeto para o GitHub.
+2. Importe o repositório na Vercel.
+3. Configure as variáveis de ambiente acima.
+4. Faça o deploy.
+5. Teste login, cadastro, hierarquia, candidaturas e relatórios.
+
+A Vercel não deve ser usada como armazenamento permanente do arquivo SQLite local. Em produção, com as variáveis Turso configuradas, o backend passa a gravar no banco remoto.
+
+## Desenvolvimento local
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+Sem `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN`, o projeto usa o SQLite local.

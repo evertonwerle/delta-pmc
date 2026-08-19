@@ -5,6 +5,7 @@ const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
 const database = require('./database');
+const TursoSessionStore = require('./turso-session-store');
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -13,8 +14,21 @@ app.disable('x-powered-by');
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
+// Em produção, o banco pode ser Turso e precisa terminar as migrações
+// assíncronas antes que qualquer rota faça uma consulta.
+app.use(async (req, res, next) => {
+  try {
+    await database.ready;
+    next();
+  } catch (error) {
+    console.error('[DELTA] Falha ao inicializar o banco:', error);
+    res.status(500).json({ erro: 'Não foi possível inicializar o banco de dados.' });
+  }
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'delta-dev-secret-troque-depois',
+  store: new TursoSessionStore({ ttl: 8 * 60 * 60 * 1000 }),
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -52,7 +66,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ erro: 'Erro interno do servidor.' });
 });
 
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
