@@ -84,6 +84,6 @@ router.get('/promovidos', requireCommand, async (req,res)=>{
 });
 
 // Desligamentos: usa o histórico de exonerações já existente.
-router.get('/desligamentos', requireCommand, async (req,res)=>res.json({desligamentos:await db.all(`SELECT e.*,u.nome AS usuario_atual_nome,u.cargo_delta AS cargo_atual FROM exoneracoes e LEFT JOIN users u ON u.id=e.usuario_id ORDER BY e.id DESC`)}));
+router.get('/desligamentos', async (req,res)=>{ if(!req.session?.admin && !req.session?.user?.id) return res.status(401).json({erro:'Faça login para consultar os desligamentos.'}); res.json({desligamentos:await db.all(`SELECT e.*,u.nome AS usuario_atual_nome,u.cargo_delta AS cargo_atual FROM exoneracoes e LEFT JOIN users u ON u.id=e.usuario_id ORDER BY e.id DESC`)}); });
 
 module.exports=router;

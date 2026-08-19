@@ -713,7 +713,7 @@ input[type="checkbox"], input[type="radio"]{
     <a class="command-only discord-nav" data-page="discord" data-module="documentacao" style="display:none;">📚 Documentação</a>
     <a class="command-only discord-nav" data-page="discord" data-module="promovidos" style="display:none;">🏆 Promovidos</a>
     <a class="command-only discord-nav" data-page="discord" data-module="advertencias" style="display:none;">🛑 Advertências</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
+    <a class="discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
     <a class="command-only discord-nav" data-page="discord" data-module="bate-ponto" style="display:none;">📋 Bate-Ponto</a>
     <a class="command-only discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
@@ -1273,16 +1273,31 @@ input[type="checkbox"], input[type="radio"]{
 
       <div id="admin-section-hierarquia" class="admin-section">
         <div class="admin-return-bar"><button type="button" class="admin-return-btn" onclick="adminTab('central',this)">← VOLTAR PARA ADMINISTRAÇÃO</button><span class="admin-return-title">Central de Administração</span></div>
-        <div class="admin-table-wrap">
-          <div class="admin-table-head">HIERARQUIA DA UNIDADE <span class="admin-refresh">CONTROLE RESTRITO</span></div>
-          <div style="padding:18px 22px;">
-            <p class="hierarchy-note">Somente <strong>GESTOR</strong>, <strong>SUB-GESTOR</strong> e <strong>COORDENADOR</strong> podem alterar cargos. O administrador do sistema também possui acesso para gerenciamento.</p>
-            <div id="hierarquia-atualizacao" class="admin-refresh" style="margin:0 0 12px 0;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button type="button" class="admin-tab active" id="hierarquia-subtab-membros" onclick="mostrarHierarquiaSubtab('membros',this)">HIERARQUIA</button>
+          <button type="button" class="admin-tab" id="hierarquia-subtab-desligamentos" onclick="mostrarHierarquiaSubtab('desligamentos',this)">DESLIGAMENTOS</button>
+        </div>
+        <div id="hierarquia-subtab-membros">
+          <div class="admin-table-wrap">
+            <div class="admin-table-head">HIERARQUIA DA UNIDADE <span class="admin-refresh">CONTROLE RESTRITO</span></div>
+            <div style="padding:18px 22px;">
+              <p class="hierarchy-note">Cargos: <strong>GESTOR</strong>, <strong>SUB-GESTOR</strong>, <strong>COORDENADOR</strong>, <strong>PILOTO MASTER</strong>, <strong>PILOTO DE ELITE</strong>, <strong>PILOTO ESPECIALISTA</strong>, <strong>PILOTO AVANÇADO</strong>, <strong>PILOTO ASPIRANTE</strong>, <strong>PILOTO PROBATORIO</strong> e <strong>CANDIDATO</strong>. Somente o Comando pode alterar cargos. Pilotos não possuem acesso administrativo nem edição de conteúdo.</p>
+              <div id="hierarquia-atualizacao" class="admin-refresh" style="margin:0 0 12px 0;"></div>
+            </div>
+            <table>
+              <thead><tr><th>NOME</th><th>USUÁRIO</th><th>CARGO ATUAL</th><th>STATUS</th><th>ALTERAR CARGO</th><th>AÇÃO</th></tr></thead>
+              <tbody id="hierarquia-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:25px;">Carregando usuários...</td></tr></tbody>
+            </table>
           </div>
-          <table>
-            <thead><tr><th>NOME</th><th>USUÁRIO</th><th>CARGO ATUAL</th><th>STATUS</th><th>ALTERAR CARGO</th><th>AÇÃO</th></tr></thead>
-            <tbody id="hierarquia-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:25px;">Carregando usuários...</td></tr></tbody>
-          </table>
+        </div>
+        <div id="hierarquia-subtab-desligamentos" style="display:none;">
+          <div class="admin-table-wrap">
+            <div class="admin-table-head">DESLIGAMENTOS <span class="admin-refresh">HISTÓRICO PERMANENTE</span></div>
+            <div style="padding:14px 18px;">
+              <p class="hierarchy-note">Registros de exoneração permanecem salvos mesmo quando a conta deixa de existir ou retorna posteriormente ao processo seletivo.</p>
+              <div id="hierarquia-desligamentos-lista">Carregando...</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1578,6 +1593,16 @@ async function loadMinhaSituacao(){
     loading.style.display='none';
     if(!r.ok){ empty.style.display='block'; empty.textContent=j.erro||'Não foi possível consultar sua candidatura.'; return; }
     if(!j.encontrada){
+      if(isPilotCargo(currentCargo)){
+        window.candidaturaAprovada=false;
+        setInscricaoNav(false);
+        setSituacaoNav(false);
+        setStageNav(0);
+        setHallAccess(true);
+        setStudyAccess({manual:true, apostila:false});
+        if(document.getElementById('page-situacao')?.classList.contains('active')) goPage('hall');
+        return;
+      }
       empty.style.display='block';
       window.inscricaoEnviada=false;
       window.candidaturaAprovada=false;
@@ -1591,8 +1616,9 @@ async function loadMinhaSituacao(){
     const status=String(j.status||'PENDENTE').toUpperCase();
     const aprovado=status==='APROVADO';
     window.candidaturaAprovada=aprovado;
-    setHallAccess(aprovado);
-    if(currentRole==='user') setStudyAccess({manual:aprovado, apostila:true});
+    const piloto=isPilotCargo(currentCargo);
+    setHallAccess(aprovado || piloto);
+    if(currentRole==='user') setStudyAccess({manual:aprovado || piloto, apostila:!piloto});
     // Situação e etapas são exclusivas de quem ainda está no processo seletivo.
     setSituacaoNav(!aprovado);
     if(aprovado){
@@ -1619,6 +1645,11 @@ async function loadMinhaSituacao(){
 
 async function syncInscricaoAccess(){
   if(currentRole !== 'user') return true;
+  if(isPilotCargo(currentCargo)){
+    window.inscricaoEnviada=true; window.candidaturaAprovada=true;
+    setInscricaoNav(false); setSituacaoNav(false); setStageNav(0); setHallAccess(true); setStudyAccess({manual:true,apostila:false});
+    return false;
+  }
   try{
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setInscricaoNav(true); return true; }
@@ -1684,6 +1715,10 @@ function setStageNav(stage){
 }
 
 async function syncStageAccess(idOverride){
+  if(isPilotCargo(currentCargo)){
+    setStageNav(0); setSituacaoNav(false); setHallAccess(true); setStudyAccess({manual:true,apostila:false});
+    return 0;
+  }
   try{
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setStageNav(0); return 0; }
@@ -1728,6 +1763,10 @@ setStageNav(0);
 let authReady=false;
 let currentRole=null;
 let currentCargo="";
+const PILOTO_CARGOS=['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
+function isPilotCargo(cargo=currentCargo){
+  return PILOTO_CARGOS.includes(String(cargo||'').trim().toUpperCase());
+}
 window.candidaturaAprovada=false;
 window.situacaoLiberada=false;
 
@@ -1756,7 +1795,8 @@ function applyRole(role, profile, initialNavigation=false){
   const fullAdminAccess = role==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(currentCargo);
   const adminBtn=document.getElementById('admin-nav-button');
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
-  setCommandNav(fullAdminAccess, profile?.aprovado===true);
+  const pilotAccess = profile?.aprovado===true || isPilotCargo(currentCargo);
+  setCommandNav(fullAdminAccess, pilotAccess);
 
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
@@ -1776,7 +1816,7 @@ function applyRole(role, profile, initialNavigation=false){
     if(relNav) relNav.style.display='';
     if(vtrNav) vtrNav.style.display='';
   }
-  if(!fullAdminAccess) setSituacaoNav(Boolean(profile?.inscricao_enviada));
+  if(!fullAdminAccess) setSituacaoNav(Boolean(profile?.inscricao_enviada) && !pilotAccess);
   // Para os cargos administrativos, as etapas também ficam visíveis para navegação e edição.
   if(fullAdminAccess){
     document.querySelectorAll('.stage-nav').forEach(a=>a.hidden=false);
@@ -1818,9 +1858,10 @@ function applyRole(role, profile, initialNavigation=false){
     document.getElementById('admin-login-view').style.display='none';
     document.getElementById('admin-panel').style.display='none';
     const aprovado=profile?.aprovado===true;
-    setHallAccess(aprovado);
-    setStudyAccess({manual:aprovado, apostila:Boolean(profile?.inscricao_enviada)});
-    if(aprovado) goPage('hall');
+    const piloto=isPilotCargo(currentCargo);
+    setHallAccess(aprovado || piloto);
+    setStudyAccess({manual:aprovado || piloto, apostila:!piloto && Boolean(profile?.inscricao_enviada)});
+    if(aprovado || piloto) goPage('hall');
     else if(profile?.inscricao_enviada) goPage('apostila');
     else goPage('inscricao');
     syncInscricaoAccess();
@@ -2108,7 +2149,16 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 async function liberarEtapa(id, etapa){
   const nome = etapa===1 ? 'Etapa 1' : etapa===2 ? 'Etapa 2' : 'Etapa 3';
   if(!(await deltaConfirm('Liberar etapa', `Liberar ${nome} para este candidato?`, {okText:'LIBERAR'}))) return;
-  await updateCandidatura(id,{etapa:etapa,status:'PENDENTE'});
+  try{
+    const r=await fetch(`/api/candidaturas/${id}/liberar-etapa`,{
+      method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},
+      body:JSON.stringify({etapa:Number(etapa)})
+    });
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){await deltaNotice('Não foi possível liberar',j.erro||`HTTP ${r.status}`);return;}
+    await refreshAdmin();
+    await deltaNotice('Etapa liberada',`A ${nome} foi liberada com sucesso.`);
+  }catch(e){await deltaNotice('Erro de conexão','Não foi possível comunicar com o servidor.');}
 }
 
 async function decidirCandidatura(id,status){
@@ -2133,7 +2183,7 @@ function renderCandidaturasPipeline(rows){
   const cards=etapas.map(n=>{
     const list=candidatos.filter(x=>Number(x.etapa_liberada||0)===n && String(x.status||'')!=='REPROVADO');
     return `<div style="background:rgba(12,24,40,.72);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:120px;flex:1;min-width:220px;">
-      <div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">PILOTO PROBATÓRIO • ETAPA ${n}</div>
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">CANDIDATO • ETAPA ${n}</div>
       <div style="margin-top:9px;display:flex;flex-direction:column;gap:7px;">${list.length?list.map(x=>{
         const next=n<3?`<button type="button" class="table-action" onclick="liberarEtapa(${Number(x.id)},${n+1})">LIBERAR ${n+1}ª ETAPA</button>`:`<span class="status-chip pend">AGUARDANDO DECISÃO</span>`;
         return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line-soft);"><div style="min-width:0;"><div style="font-size:13px;color:var(--text);font-weight:700;">${esc(x.personagem)}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ID #${esc(x.id_jogador)}</div></div><div>${next}</div></div>`;
@@ -2143,7 +2193,7 @@ function renderCandidaturasPipeline(rows){
   const aguardando=candidatos.filter(x=>Number(x.etapa_liberada||0)===0 && String(x.status||'')==='PENDENTE');
   const aguardandoCard=`<div style="background:rgba(12,24,40,.72);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:120px;flex:1;min-width:220px;"><div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">AGUARDANDO • ETAPA 1</div><div style="margin-top:9px;display:flex;flex-direction:column;gap:7px;">${aguardando.length?aguardando.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line-soft);"><div><div style="font-size:13px;font-weight:700;">${esc(x.personagem)}</div><div style="font-size:10px;color:var(--text-dim);">ID #${esc(x.id_jogador)}</div></div><button type="button" class="table-action" onclick="liberarEtapa(${Number(x.id)},1)">LIBERAR 1ª ETAPA</button></div>`).join(''):'<span style="font-size:12px;color:var(--text-dim);">Nenhum candidato aguardando.</span>'}</div></div>`;
   const finalizados=candidatos.filter(x=>Number(x.etapa_liberada||0)>=3 && String(x.status||'')==='APROVADO');
-  el.innerHTML=`<div class="admin-table-wrap" style="padding:16px 18px;"><div class="admin-table-head" style="padding:0 0 12px 0;border:0;">PILOTO PROBATÓRIO <span class="admin-refresh">FLUXO DE CANDIDATOS</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;">${aguardandoCard}${cards}</div>${finalizados.length?`<div style="margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(77,220,151,.2);background:rgba(77,220,151,.05);font-size:12px;color:var(--text-dim);">${finalizados.map(x=>`<strong style="color:var(--text);">${esc(x.personagem)}</strong>`).join(', ')} — 3 etapas concluídas e aprovação final. Cargo definido automaticamente como <strong style="color:var(--blue);">PILOTO PROBATORIO</strong>.</div>`:''}</div>`;
+  el.innerHTML=`<div class="admin-table-wrap" style="padding:16px 18px;"><div class="admin-table-head" style="padding:0 0 12px 0;border:0;">CANDIDATOS <span class="admin-refresh">FLUXO DE CANDIDATURAS</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;">${aguardandoCard}${cards}</div>${finalizados.length?`<div style="margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(77,220,151,.2);background:rgba(77,220,151,.05);font-size:12px;color:var(--text-dim);">${finalizados.map(x=>`<strong style="color:var(--text);">${esc(x.personagem)}</strong>`).join(', ')} — 3 etapas concluídas e aprovação final. Cargo definido automaticamente como <strong style="color:var(--blue);">PILOTO PROBATORIO</strong>.</div>`:''}</div>`;
 }
 
 async function loadCandidaturas(){
@@ -2506,6 +2556,31 @@ async function loadHierarquia(){
   }catch(e){ console.error(e); }
 }
 
+function mostrarHierarquiaSubtab(tab,btn){
+  const membros=document.getElementById('hierarquia-subtab-membros');
+  const deslig=document.getElementById('hierarquia-subtab-desligamentos');
+  if(!membros||!deslig)return;
+  membros.style.display=tab==='membros'?'':'none';
+  deslig.style.display=tab==='desligamentos'?'':'none';
+  document.querySelectorAll('#admin-section-hierarquia > div:first-of-type .admin-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tab==='desligamentos') loadHierarquiaDesligamentos();
+}
+async function loadHierarquiaDesligamentos(){
+  const el=document.getElementById('hierarquia-desligamentos-lista'); if(!el)return;
+  el.innerHTML='<div style="padding:15px;color:var(--text-dim)">Carregando...</div>';
+  try{
+    const r=await fetch('/api/hierarquia/desligamentos',{credentials:'same-origin',cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){el.innerHTML=`<div style="padding:15px;color:#FF6B6B">${esc(j.erro||'Não foi possível carregar os desligamentos.')}</div>`;return;}
+    const rows=j.desligamentos||[];
+    if(!rows.length){el.innerHTML='<div style="padding:15px;color:var(--text-dim)">Nenhum desligamento registrado.</div>';return;}
+    el.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>NOME</th><th>CARGO</th><th>NÍVEL</th><th>MOTIVO</th><th>DATA</th><th>RESPONSÁVEL</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.nome||'-')}</td><td>${esc(x.cargo_no_momento||'-')}</td><td>${esc(x.nivel||'-')}</td><td>${esc(x.motivo||'-')}</td><td>${esc(x.ocorrido_em||'-')}</td><td>${esc(x.responsavel_tipo||'-')}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(e){console.error(e);el.innerHTML='<div style="padding:15px;color:#FF6B6B">Erro ao carregar desligamentos.</div>';}
+}
+async function exonerarPiloto(id){
+  abrirModalAcao({tipo:'exonerar',titulo:'Exonerar piloto',subtitulo:'Preencha os dados obrigatórios. O registro será mantido em Desligamentos.',id});
+}
 async function salvarHierarquia(id){
   const select=document.getElementById(`cargo-${id}`);
   if(!select) return;

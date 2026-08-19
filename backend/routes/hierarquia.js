@@ -13,7 +13,8 @@ const CARGOS = [
   'PILOTO ESPECIALISTA',
   'PILOTO AVANÇADO',
   'PILOTO ASPIRANTE',
-  'PILOTO PROBATORIO'
+  'PILOTO PROBATORIO',
+  'CANDIDATO'
 ];
 
 router.get('/permissoes', async (req, res) => {
@@ -48,7 +49,8 @@ router.get('/', hierarchyAuth, async (req, res) => {
         WHEN 'PILOTO AVANÇADO' THEN 7
         WHEN 'PILOTO ASPIRANTE' THEN 8
         WHEN 'PILOTO PROBATORIO' THEN 9
-        ELSE 10
+        WHEN 'CANDIDATO' THEN 10
+        ELSE 11
       END,
       nome COLLATE NOCASE
   `);
@@ -210,8 +212,10 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
       FROM users u WHERE u.id = ? LIMIT 1
     `, [id]);
     if (!user) return res.status(404).json({ erro: 'Usuário não encontrado.' });
-    if (String(user.candidatura_status || '').toUpperCase() !== 'APROVADO') {
-      return res.status(400).json({ erro: 'Somente pilotos com candidatura aprovada podem ser exonerados.' });
+    const cargoUsuario = String(user.cargo_delta || '').toUpperCase();
+    const cargosPiloto = ['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
+    if (!cargosPiloto.includes(cargoUsuario) && String(user.candidatura_status || '').toUpperCase() !== 'APROVADO') {
+      return res.status(400).json({ erro: 'Somente candidatos aprovados ou pilotos podem ser exonerados.' });
     }
     if (['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(user.cargo_delta || '').toUpperCase())) {
       return res.status(400).json({ erro: 'Contas de comando não podem ser exoneradas por esta função.' });
@@ -275,6 +279,24 @@ router.patch('/usuarios/:id/banir', async (req,res)=>{
     await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`,[r.tipo,r.id,r.nome,'BANIMENTO PERMANENTE','USUARIO',id,motivo]);
     res.json({sucesso:true,mensagem:`${u.nome} foi banido permanentemente.`});
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível banir o usuário.'});}
+});
+
+router.get('/desligamentos', async (req, res) => {
+  try {
+    if (!req.session?.admin && !req.session?.user?.id) {
+      return res.status(401).json({ erro: 'Faça login para consultar os desligamentos.' });
+    }
+    const rows = await db.all(`
+      SELECT e.id, e.usuario_id, e.nome, e.username, e.cargo_no_momento,
+             e.nivel, e.motivo, e.responsavel_tipo, e.responsavel_id, e.ocorrido_em
+      FROM exoneracoes e
+      ORDER BY e.ocorrido_em DESC, e.id DESC
+    `);
+    res.json({ desligamentos: rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ erro: 'Não foi possível carregar os desligamentos.' });
+  }
 });
 
 router.get('/usuarios/:id/exoneracoes', async (req, res) => {

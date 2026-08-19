@@ -4,6 +4,7 @@ const hierarchyAuth = require('../middleware/hierarchy');
 const contentAuth = require('../middleware/content');
 
 const router = express.Router();
+const PILOTO_CARGOS = ['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
 
 function normalizeCategoria(c) {
   const v = String(c || '').toUpperCase();
@@ -27,8 +28,9 @@ router.get('/', async (req, res) => {
       return res.json({ documentos: rows, acesso_manual: false, acesso_apostila: false });
     }
 
+    const user = await db.get(`SELECT cargo_delta FROM users WHERE id = ? LIMIT 1`, [userId]);
     const candidatura = await db.get(`SELECT status FROM candidaturas WHERE usuario_id = ? ORDER BY id DESC LIMIT 1`, [userId]);
-    const aprovado = String(candidatura?.status || '').toUpperCase() === 'APROVADO';
+    const aprovado = String(candidatura?.status || '').toUpperCase() === 'APROVADO' || PILOTO_CARGOS.includes(String(user?.cargo_delta || '').toUpperCase());
     const categoriaPermitida = aprovado ? 'MANUAL' : (candidatura ? 'APOSTILA' : null);
     const rows = categoriaPermitida
       ? await db.all(`SELECT id, categoria, titulo, conteudo, ordem, ativo, atualizado_em FROM documentos WHERE ativo = 1 AND categoria IN ('EDITAL', ?) ORDER BY categoria, ordem, id`, [categoriaPermitida])
