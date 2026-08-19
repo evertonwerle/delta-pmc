@@ -1,0 +1,9 @@
+ATUALIZAÇÃO DELTA PMC
+
+Substitua no seu projeto atual:
+1. frontend/index.html
+2. backend/routes/candidaturas.js
+
+Não apague a pasta data e não apague data/delta.sqlite.
+Não precisa rodar npm install, init-db ou create-admin.
+Depois reinicie com npm start.
