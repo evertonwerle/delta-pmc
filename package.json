@@ -1,0 +1,28 @@
+{
+  "name": "delta-sqlite-corrigido-vercel",
+  "version": "1.0.0",
+  "description": "1. GESTOR 2. SUB-GESTOR 3. COORDENADOR 4. PILOTO MASTER 5. PILOTO DE ELITE 6. PILOTO ESPECIALISTA 7. PILOTO AVANÇADO 8. PILOTO ASPIRANTE 9. PILOTO PROBATORIO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evertonwerle/delta-pmc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/evertonwerle/delta-pmc/issues"
+  },
+  "homepage": "https://github.com/evertonwerle/delta-pmc#readme",
+  "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
