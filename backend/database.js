@@ -119,7 +119,8 @@ async function initialize() {
     ['users', 'inscricao_enviada', 'ALTER TABLE users ADD COLUMN inscricao_enviada INTEGER NOT NULL DEFAULT 0'],
     ['users', 'status_conta', "ALTER TABLE users ADD COLUMN status_conta TEXT NOT NULL DEFAULT 'ATIVA'"],
     ['apreensoes', 'id_pessoa', "ALTER TABLE apreensoes ADD COLUMN id_pessoa TEXT NOT NULL DEFAULT ''"],
-    ['apreensoes', 'imagem_url', 'ALTER TABLE apreensoes ADD COLUMN imagem_url TEXT']
+    ['apreensoes', 'imagem_url', 'ALTER TABLE apreensoes ADD COLUMN imagem_url TEXT'],
+    ['exoneracoes', 'observacoes', 'ALTER TABLE exoneracoes ADD COLUMN observacoes TEXT']
   ];
 
   for (const [table, column, sql] of migrations) {

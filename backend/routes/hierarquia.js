@@ -191,20 +191,25 @@ router.get('/usuarios/:id/cargo', hierarchyAuth, async (req, res) => {
 async function canManageApprovedPilot(req) {
   if (req.session?.admin) return true;
   const cargo = await hierarchyAuth.cargoAtual(req);
-  return ['GESTOR', 'SUB-GESTOR'].includes(cargo);
+  return ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'].includes(cargo);
 }
 
-router.patch('/usuarios/:id/exonerar', async (req, res) => {
+router.patch('/usuarios/:id/exonerar', hierarchyAuth, async (req, res) => {
   try {
     if (!await canManageApprovedPilot(req)) {
-      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem exonerar pilotos aprovados.' });
+      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem exonerar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
     const nivel = String(req.body?.nivel || '').trim().toUpperCase();
     const motivo = String(req.body?.motivo || '').trim();
+    const observacoes = String(req.body?.observacoes || '').trim();
+    const dataExoneracao = String(req.body?.data_exoneracao || '').trim();
+    const cargoInformado = String(req.body?.cargo || '').trim().toUpperCase();
     const niveis = ['ABANDONO_DE_POSTO','INSUBORDINACAO','CONDUTA_INADEQUADA','BAIXA_ATIVIDADE','OUTROS'];
     if (!niveis.includes(nivel)) return res.status(400).json({ erro: 'Selecione um nível de exoneração válido.' });
     if (motivo.length < 3) return res.status(400).json({ erro: 'Informe o motivo/detalhamento da exoneração.' });
+    if (observacoes.length < 3) return res.status(400).json({ erro: 'Informe as observações da exoneração.' });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataExoneracao)) return res.status(400).json({ erro: 'Informe uma data de exoneração válida.' });
 
     const user = await db.get(`
       SELECT u.id, u.nome, u.username, u.cargo_delta, u.ativo,
@@ -220,16 +225,24 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
     if (['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(user.cargo_delta || '').toUpperCase())) {
       return res.status(400).json({ erro: 'Contas de comando não podem ser exoneradas por esta função.' });
     }
+    if (cargoInformado && cargoInformado !== String(user.cargo_delta || '').toUpperCase()) {
+      return res.status(409).json({ erro: 'O cargo informado não corresponde ao cargo atual salvo no banco. Atualize a hierarquia e tente novamente.' });
+    }
 
+    const responsavelTipo = req.session.admin ? 'ADMIN' : String(req.session.user?.cargo || 'GESTOR').toUpperCase();
+    const responsavelId = req.session.admin?.id ?? req.session.user?.id ?? null;
     await db.run(`
       INSERT INTO exoneracoes
-      (usuario_id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, responsavel_id, ocorrido_em)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      (usuario_id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, responsavel_id, observacoes, ocorrido_em)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       user.id, user.nome, user.username, user.cargo_delta || 'PILOTO',
-      nivel, motivo,
-      req.session.admin ? 'ADMIN' : String(req.session.user?.cargo || 'GESTOR').toUpperCase(),
-      req.session.admin?.id ?? req.session.user?.id ?? null
+      nivel, motivo, responsavelTipo, responsavelId, observacoes, `${dataExoneracao} 00:00:00`
+    ]);
+
+    await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`, [
+      responsavelTipo, responsavelId, req.session.admin?.nome || req.session.admin?.username || req.session.user?.nome || req.session.user?.username || 'Sistema',
+      'EXONERAÇÃO', 'USUARIO', user.id, `Cargo: ${user.cargo_delta || '-'} • Nível: ${nivel} • Motivo: ${motivo}`
     ]);
 
     // Fecha a candidatura aprovada atual sem apagar o histórico. Assim, o
@@ -288,8 +301,12 @@ router.get('/desligamentos', async (req, res) => {
     }
     const rows = await db.all(`
       SELECT e.id, e.usuario_id, e.nome, e.username, e.cargo_no_momento,
-             e.nivel, e.motivo, e.responsavel_tipo, e.responsavel_id, e.ocorrido_em
+             e.nivel, e.motivo, e.observacoes, e.responsavel_tipo, e.responsavel_id, e.ocorrido_em,
+             CASE WHEN e.responsavel_tipo = 'ADMIN' THEN COALESCE(a.nome, a.username, 'ADMINISTRADOR')
+                  ELSE COALESCE(ru.nome, e.responsavel_tipo) END AS responsavel_nome
       FROM exoneracoes e
+      LEFT JOIN admins a ON e.responsavel_tipo='ADMIN' AND a.id=e.responsavel_id
+      LEFT JOIN users ru ON e.responsavel_tipo<>'ADMIN' AND ru.id=e.responsavel_id
       ORDER BY e.ocorrido_em DESC, e.id DESC
     `);
     res.json({ desligamentos: rows });
@@ -303,7 +320,7 @@ router.get('/usuarios/:id/exoneracoes', async (req, res) => {
   try {
     if (!await canManageApprovedPilot(req)) return res.status(403).json({ erro: 'Sem permissão.' });
     const rows = await db.all(`
-      SELECT id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, ocorrido_em
+      SELECT id, nome, username, cargo_no_momento, nivel, motivo, observacoes, responsavel_tipo, ocorrido_em
       FROM exoneracoes WHERE usuario_id = ? ORDER BY id DESC
     `, [Number(req.params.id)]);
     const retornos = await db.all(`

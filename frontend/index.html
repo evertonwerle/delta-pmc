@@ -314,7 +314,7 @@ body.auth-locked .topnav,body.auth-locked .page{display:none!important}
 .delta-modal-head h2{margin:0 0 6px;font-size:22px}.delta-modal-head p{margin:0;color:#94a3b8;font-size:14px}
 .delta-modal-body{padding:24px 26px}.delta-modal-label{display:block;margin:0 0 8px;color:#cbd5e1;font-size:13px;font-weight:700}
 .delta-modal select,.delta-modal textarea,.delta-modal input{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#0f172a;color:#f8fafc;padding:12px;font:inherit;outline:none}
-.delta-modal textarea{min-height:130px;resize:vertical}.delta-modal select:focus,.delta-modal textarea:focus,.delta-modal input:focus{border-color:#64748b}
+.delta-modal textarea{min-height:130px;resize:vertical}.delta-modal [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(2,minmax(0,1fr))}.delta-modal select:focus,.delta-modal textarea:focus,.delta-modal input:focus{border-color:#64748b}
 .delta-modal-warning{margin:0 0 18px;padding:13px 14px;border-radius:10px;background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.22);color:#fbbf24;font-size:13px;line-height:1.45}
 .delta-modal-danger{margin:0 0 18px;padding:13px 14px;border-radius:10px;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-size:13px;line-height:1.45}
 .delta-modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:18px 26px;border-top:1px solid rgba(255,255,255,.08)}
@@ -718,7 +718,6 @@ input[type="checkbox"], input[type="radio"]{
     <a class="command-only discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
     <div class="nav-group-label command-or-pilot" id="nav-group-informacoes">INFORMAÇÕES GERAIS</div>
-    <a class="discord-nav command-or-pilot" data-page="discord" data-module="localizacoes" style="display:none;">📍 Localizações</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="sugestoes" style="display:none;">📄 Sugestões</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="liberacao-delta" style="display:none;">🚓 Liberação-DELTA</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="uniforme" style="display:none;">👕 Uniforme</a>
@@ -1401,7 +1400,6 @@ function setCommandNav(fullAdminAccess, approved){
     'apreensoes': command||approved,
     'acoes-fechadas': command||approved,
     'uniforme': command||approved,
-    'localizacoes': command||approved,
     'sugestoes': command||approved,
     'liberacao-delta': command||approved,
     'ausencia': command||approved,
@@ -1418,7 +1416,6 @@ const discordModules={
   desligamento:{title:'DESLIGAMENTO',eyebrow:'ADMINISTRATIVO',desc:'Histórico de desligamentos e exonerações.',key:'desligamento'},
   badges:{title:'BADGES',eyebrow:'ADMINISTRATIVO',desc:'Condecorações e distintivos vinculados aos pilotos.',key:'badges'},
   'bate-ponto':{title:'BATE-PONTO',eyebrow:'ADMINISTRATIVO',desc:'Registre entrada e saída e consulte suas horas.',key:'bate-ponto'},
-  localizacoes:{title:'LOCALIZAÇÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Locais e referências úteis para a operação.',key:'localizacoes'},
   sugestoes:{title:'SUGESTÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Envie sugestões ao Comando e acompanhe respostas.',key:'sugestoes'},
   'liberacao-delta':{title:'LIBERAÇÃO-DELTA',eyebrow:'INFORMAÇÕES GERAIS',desc:'Orientações e informações sobre liberação e deslocamento da unidade.',key:'liberacao-delta'},
   uniforme:{title:'UNIFORME',eyebrow:'INFORMAÇÕES GERAIS',desc:'Consulte o padrão de uniforme e peças cadastradas.',key:'uniforme'},
@@ -1437,7 +1434,7 @@ async function openDiscordModule(module){
   if(!body)return;
   document.querySelectorAll('.discord-nav').forEach(a=>a.classList.toggle('active',a.dataset.module===module));
   body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim)">Carregando...</div>';
-  if(['comunicados','avisos','localizacoes','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
+  if(['comunicados','avisos','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
   if(module==='documentacao') return loadDiscordContent('documentacao',body);
   if(module==='promovidos') return loadPromovidos(body);
   if(module==='advertencias') return loadAdvertencias(body);
@@ -2150,17 +2147,25 @@ async function liberarEtapa(id, etapa){
   const nome = etapa===1 ? 'Etapa 1' : etapa===2 ? 'Etapa 2' : 'Etapa 3';
   if(!(await deltaConfirm('Liberar etapa', `Liberar ${nome} para este candidato?`, {okText:'LIBERAR'}))) return;
   try{
-    const r=await fetch(`/api/candidaturas/${id}/liberar-etapa`,{
+    const r=await fetch(`/api/candidaturas/${Number(id)}/liberar-etapa`,{
       method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},
       body:JSON.stringify({etapa:Number(etapa)})
     });
     const j=await r.json().catch(()=>({}));
     if(!r.ok){await deltaNotice('Não foi possível liberar',j.erro||`HTTP ${r.status}`);return;}
+    const confirmado=Number(j.candidatura?.etapa_liberada ?? j.etapa_liberada ?? 0);
+    if(confirmado!==Number(etapa)){
+      await deltaNotice('Atenção','O servidor respondeu, mas a etapa não foi confirmada no banco.');
+      return;
+    }
+    // Atualiza imediatamente e depois faz uma nova leitura do banco.
+    document.querySelectorAll(`[onclick*="liberarEtapa(${Number(id)},"]`).forEach(btn=>{
+      btn.disabled=true; btn.textContent='ATUALIZANDO...';
+    });
     await refreshAdmin();
-    await deltaNotice('Etapa liberada',`A ${nome} foi liberada com sucesso.`);
-  }catch(e){await deltaNotice('Erro de conexão','Não foi possível comunicar com o servidor.');}
+    await deltaNotice('Etapa liberada',`${nome} foi liberada e gravada no banco com sucesso.`);
+  }catch(e){console.error('[DELTA] Erro ao liberar etapa',e);await deltaNotice('Erro de conexão','Não foi possível comunicar com o servidor.');}
 }
-
 async function decidirCandidatura(id,status){
   const texto=status==='APROVADO'?'aprovar':'reprovar';
   if(!(await deltaConfirm('Confirmação', `Tem certeza que deseja ${texto} este candidato após as 3 etapas?`, {danger:true}))) return;
@@ -2538,19 +2543,18 @@ async function loadHierarquia(){
       const aprovado=String(u.candidatura_status||'').toUpperCase()==='APROVADO';
       const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
       const aprovadoBadge=aprovado?'<span class="status-chip appr" style="margin-left:6px;">APROVADO</span>':'';
-      const actions=aprovado && podeGerenciarAprovado && !self
-        ? `<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
-             <button class="table-action danger" type="button" onclick="exonerarPiloto(${u.id})">EXONERAR</button><button class="table-action" type="button" onclick="verHistoricoExoneracao(${u.id})">HISTÓRICO</button>
-             <button class="table-action danger" type="button" onclick="deletarPilotoAprovado(${u.id})">DELETAR</button>
-           </div>`
-        : '<span style="color:var(--text-dim);font-size:11px;">—</span>';
+      const cargoPiloto=['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'].includes(cargoAtual);
+      const podeExonerar=cargoPiloto && aprovado && podeGerenciarAprovado && !self && ativo;
+      const actions=podeExonerar
+        ? `<button class="table-action danger" type="button" onclick="exonerarPiloto(${u.id}, ${JSON.stringify(u.cargo_delta||cargoAtual)})">EXONERAR</button><button class="table-action" type="button" onclick="verHistoricoExoneracao(${u.id})">HISTÓRICO</button><button class="table-action danger" type="button" onclick="deletarPilotoAprovado(${u.id})">DELETAR</button>`
+        : '';
       return `<tr>
         <td>${esc(u.nome)} ${aprovadoBadge}</td>
         <td>${esc(u.username)}</td>
-        <td><span class="hierarchy-badge">${esc(u.cargo_delta||'PILOTO PROBATORIO')}</span></td>
+        <td><span class="hierarchy-badge">${esc(u.cargo_delta||'CANDIDATO')}</span></td>
         <td><span class="hierarchy-status">${ativo?'ATIVO':'EXONERADO'}</span></td>
         <td><select class="hierarchy-select" id="cargo-${u.id}" ${disabled}>${options}</select></td>
-        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;"><button class="table-action" type="button" ${disabled} onclick="salvarHierarquia(${u.id})">SALVAR</button><span class="cargo-save-status" aria-live="polite"></span>${actions}</div></td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;"><button class="table-action" type="button" ${disabled} onclick="salvarHierarquia(${u.id})">SALVAR</button>${actions}<span class="cargo-save-status" aria-live="polite"></span></div></td>
       </tr>`;
     }).join('');
   }catch(e){ console.error(e); }
@@ -2575,11 +2579,13 @@ async function loadHierarquiaDesligamentos(){
     if(!r.ok){el.innerHTML=`<div style="padding:15px;color:#FF6B6B">${esc(j.erro||'Não foi possível carregar os desligamentos.')}</div>`;return;}
     const rows=j.desligamentos||[];
     if(!rows.length){el.innerHTML='<div style="padding:15px;color:var(--text-dim)">Nenhum desligamento registrado.</div>';return;}
-    el.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>NOME</th><th>CARGO</th><th>NÍVEL</th><th>MOTIVO</th><th>DATA</th><th>RESPONSÁVEL</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.nome||'-')}</td><td>${esc(x.cargo_no_momento||'-')}</td><td>${esc(x.nivel||'-')}</td><td>${esc(x.motivo||'-')}</td><td>${esc(x.ocorrido_em||'-')}</td><td>${esc(x.responsavel_tipo||'-')}</td></tr>`).join('')}</tbody></table></div>`;
+    el.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>NOME</th><th>CARGO</th><th>NÍVEL</th><th>MOTIVO</th><th>OBSERVAÇÕES</th><th>DATA</th><th>RESPONSÁVEL</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.nome||'-')}</td><td>${esc(x.cargo_no_momento||'-')}</td><td>${esc(x.nivel||'-')}</td><td>${esc(x.motivo||'-')}</td><td>${esc(x.observacoes||'-')}</td><td>${esc(x.ocorrido_em||'-')}</td><td>${esc(x.responsavel_nome||x.responsavel_tipo||'-')}</td></tr>`).join('')}</tbody></table></div>`;
   }catch(e){console.error(e);el.innerHTML='<div style="padding:15px;color:#FF6B6B">Erro ao carregar desligamentos.</div>';}
 }
-async function exonerarPiloto(id){
-  abrirModalAcao({tipo:'exonerar',titulo:'Exonerar piloto',subtitulo:'Preencha os dados obrigatórios. O registro será mantido em Desligamentos.',id});
+async function exonerarPiloto(id,cargo){
+  const nome=document.querySelector(`#cargo-${id}`)?.closest('tr')?.querySelector('td')?.textContent?.trim()||'Piloto';
+  const responsavel=document.getElementById('session-user-name')?.textContent?.trim()||currentCargo||'Comando';
+  abrirModalAcao({tipo:'exonerar',titulo:'Exonerar piloto',subtitulo:'Preencha todos os campos obrigatórios. O registro será mantido em Desligamentos.',id,cargo,nome,responsavel});
 }
 async function salvarHierarquia(id){
   const select=document.getElementById(`cargo-${id}`);
@@ -2852,15 +2858,24 @@ async function banirPiloto(id){
 function fecharModalDelta(){
   const el=document.getElementById('deltaModalRoot'); if(el) el.remove();
 }
-function abrirModalAcao({tipo,titulo,subtitulo,id}){
+function abrirModalAcao({tipo,titulo,subtitulo,id,cargo,nome,responsavel}){
   fecharModalDelta();
   let body='',danger=false,button='Continuar';
   if(tipo==='exonerar'){
-    body=`<div class="delta-modal-warning"><strong>Registro disciplinar:</strong> a exoneração ficará salva no histórico. A conta ficará fora da ativa, mas poderá retornar futuramente por nova candidatura.</div>
-      <label class="delta-modal-label">Nível da exoneração</label>
+    const hoje=new Date().toISOString().slice(0,10);
+    body=`<div class="delta-modal-warning"><strong>Registro disciplinar:</strong> a exoneração remove o piloto da ativa, preserva todo o histórico e ficará disponível na aba <strong>DESLIGAMENTOS</strong>.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="delta-modal-label">PILOTO</label><input value="${esc(nome||'Piloto')}" readonly></div>
+        <div><label class="delta-modal-label">CARGO ATUAL</label><input value="${esc(cargo||'')}" readonly></div>
+        <div><label class="delta-modal-label">RESPONSÁVEL</label><input value="${esc(responsavel||'')}" readonly></div>
+        <div><label class="delta-modal-label">DATA DA EXONERAÇÃO *</label><input id="deltaDataExoneracao" type="date" value="${hoje}" required></div>
+      </div>
+      <div style="height:16px"></div><label class="delta-modal-label">NÍVEL DA EXONERAÇÃO *</label>
       <select id="deltaNivel"><option value="">Selecione o nível...</option><option value="ABANDONO_DE_POSTO">Abandono de posto</option><option value="INSUBORDINACAO">Insubordinação</option><option value="CONDUTA_INADEQUADA">Conduta inadequada</option><option value="BAIXA_ATIVIDADE">Baixa atividade</option><option value="OUTROS">Outros</option></select>
-      <div style="height:16px"></div><label class="delta-modal-label">Motivo / detalhamento</label>
-      <textarea id="deltaMotivo" placeholder="Descreva o motivo da exoneração..."></textarea>`;
+      <div style="height:16px"></div><label class="delta-modal-label">MOTIVO / POR QUE ESTÁ SENDO EXONERADO *</label>
+      <textarea id="deltaMotivo" placeholder="Descreva o motivo da exoneração..."></textarea>
+      <div style="height:16px"></div><label class="delta-modal-label">OBSERVAÇÕES *</label>
+      <textarea id="deltaObservacoes" style="min-height:90px" placeholder="Informe observações adicionais, fatos, contexto ou orientações..."></textarea>`;
     button='Confirmar exoneração';
   }else if(tipo==='banir'){
     danger=true; body=`<div class="delta-modal-danger"><strong>ATENÇÃO:</strong> o banimento é permanente. A conta ficará bloqueada, mas o registro administrativo será preservado.</div>
@@ -2880,6 +2895,7 @@ function abrirModalAcao({tipo,titulo,subtitulo,id}){
     <div class="delta-modal-body">${body}<div id="deltaModalError" class="delta-modal-error"></div></div>
     <div class="delta-modal-foot"><button class="delta-btn delta-btn-cancel" type="button" onclick="fecharModalDelta()">Cancelar</button>
     <button id="deltaModalConfirm" class="delta-btn ${danger?'delta-btn-danger':'delta-btn-primary'}" type="button">${button}</button></div></div>`;
+  if(tipo==='exonerar') root.dataset.cargo=cargo||'';
   document.body.appendChild(root);
   root.addEventListener('click',e=>{if(e.target===root) fecharModalDelta();});
   document.getElementById('deltaModalConfirm').onclick=()=>executarAcaoVisual(tipo,id);
@@ -2891,10 +2907,16 @@ async function executarAcaoVisual(tipo,id){
   try{
     let url='',method='PATCH',body=null;
     if(tipo==='exonerar'){
-      const nivel=document.getElementById('deltaNivel')?.value,motivo=document.getElementById('deltaMotivo')?.value.trim();
+      const nivel=document.getElementById('deltaNivel')?.value;
+      const motivo=document.getElementById('deltaMotivo')?.value.trim();
+      const observacoes=document.getElementById('deltaObservacoes')?.value.trim();
+      const data_exoneracao=document.getElementById('deltaDataExoneracao')?.value;
+      if(!data_exoneracao) return fail('Informe a data da exoneração.');
       if(!nivel) return fail('Selecione o nível da exoneração.');
       if(!motivo) return fail('Informe o motivo da exoneração.');
-      url=`/api/hierarquia/usuarios/${id}/exonerar`;body={nivel,motivo};
+      if(!observacoes) return fail('Informe as observações da exoneração.');
+      const cargoAtualModal=document.getElementById('deltaModalRoot')?.dataset.cargo||'';
+      url=`/api/hierarquia/usuarios/${id}/exonerar`;body={nivel,motivo,observacoes,data_exoneracao,cargo:cargoAtualModal};
     }else if(tipo==='banir'){
       const motivo=document.getElementById('deltaMotivo')?.value.trim();
       if(!motivo) return fail('Informe o motivo do banimento.');

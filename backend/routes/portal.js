@@ -3,7 +3,7 @@ const db=require('../database');
 const login=require('../middleware/login');
 const {isCommand,isApproved,requireContentManager,requireCommand}=require('../middleware/access');
 const router=express.Router();
-const KEYS=['comunicados','avisos','documentacao','localizacoes','liberacao-delta'];
+const KEYS=['comunicados','avisos','documentacao','liberacao-delta'];
 function actor(req){if(req.session?.admin)return {tipo:'ADMINISTRADOR',id:req.session.admin.id,nome:req.session.admin.nome||req.session.admin.username};return {tipo:String(req.session.user?.cargo||'USUARIO').toUpperCase(),id:req.session.user?.id,nome:req.session.user?.nome||req.session.user?.username};}
 async function log(req,acao,entidade,id,detalhes=''){const a=actor(req);await db.run(`INSERT INTO logs_sistema(usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?,?,?)`,[a.tipo,a.id,a.nome,acao,entidade,id||null,detalhes]);}
 async function canRead(key,req){if(['comunicados','avisos'].includes(key))return isCommand(req);return await isCommand(req)||await isApproved(req);}

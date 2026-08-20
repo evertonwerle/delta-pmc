@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS exoneracoes (
   motivo TEXT NOT NULL,
   responsavel_tipo TEXT NOT NULL,
   responsavel_id INTEGER,
+  observacoes TEXT,
   ocorrido_em TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE SET NULL
 );
