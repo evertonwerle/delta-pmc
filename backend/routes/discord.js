@@ -32,7 +32,7 @@ router.patch('/vtrs/:id', managers, async (req,res)=>{
 router.delete('/vtrs/:id', managers, async (req,res)=>{const id=Number(req.params.id);const row=await db.get('SELECT id,prefixo FROM vtrs WHERE id=?',[id]);if(!row)return res.status(404).json({erro:'VTR não encontrada.'});const result=await db.run('DELETE FROM vtrs WHERE id=?',[id]);if(Number(result?.changes||0)!==1)return res.status(409).json({erro:'A VTR não pôde ser excluída do banco de dados.'});await log(req,'EXCLUSÃO DE VTR','VTR',id,`VTR ${row.prefixo}`);res.json({sucesso:true,mensagem:'VTR excluída.'});});
 
 // Advertências
-router.get('/advertencias', requireCommand, async (req,res)=>{
+router.get('/advertencias', requireApprovedOrCommand, async (req,res)=>{
   const own=!(await isCommand(req));
   const rows=await db.all(`SELECT a.*,u.nome AS usuario_nome,u.username AS usuario_username,u.cargo_delta FROM advertencias a JOIN users u ON u.id=a.usuario_id ${own?'WHERE a.usuario_id=?':''} ORDER BY a.id DESC`,own?[req.session.user.id]:[]);
   res.json({advertencias:rows});
@@ -78,12 +78,12 @@ router.delete('/badges/:id', managers, async (req,res)=>{const id=Number(req.par
 
 
 // Promoções: histórico real de alterações de cargo.
-router.get('/promovidos', requireCommand, async (req,res)=>{
+router.get('/promovidos', requireApprovedOrCommand, async (req,res)=>{
   const rows=await db.all(`SELECT h.*,u.nome AS usuario_nome,u.username AS usuario_username FROM historico_cargos h LEFT JOIN users u ON u.id=h.usuario_id WHERE h.cargo_novo IN ('GESTOR','SUB-GESTOR','COORDENADOR','PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO') ORDER BY h.id DESC LIMIT 200`);
   res.json({promovidos:rows});
 });
 
 // Desligamentos: usa o histórico de exonerações já existente.
-router.get('/desligamentos', async (req,res)=>{ if(!req.session?.admin && !req.session?.user?.id) return res.status(401).json({erro:'Faça login para consultar os desligamentos.'}); res.json({desligamentos:await db.all(`SELECT e.*,u.nome AS usuario_atual_nome,u.cargo_delta AS cargo_atual FROM exoneracoes e LEFT JOIN users u ON u.id=e.usuario_id ORDER BY e.id DESC`)}); });
+router.get('/desligamentos', requireApprovedOrCommand, async (req,res)=>res.json({desligamentos:await db.all(`SELECT e.*,u.nome AS usuario_atual_nome,u.cargo_delta AS cargo_atual FROM exoneracoes e LEFT JOIN users u ON u.id=e.usuario_id ORDER BY e.id DESC`)}));
 
 module.exports=router;

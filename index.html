@@ -718,6 +718,7 @@ input[type="checkbox"], input[type="radio"]{
     <a class="command-only discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
     <div class="nav-group-label command-or-pilot" id="nav-group-informacoes">INFORMAÇÕES GERAIS</div>
+    <a class="discord-nav command-or-pilot" data-page="discord" data-module="localizacoes" style="display:none;">📍 Localizações</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="sugestoes" style="display:none;">📄 Sugestões</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="liberacao-delta" style="display:none;">🚓 Liberação-DELTA</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="uniforme" style="display:none;">👕 Uniforme</a>
@@ -1385,6 +1386,7 @@ function setCommandNav(fullAdminAccess, approved){
     'apreensoes': command||approved,
     'acoes-fechadas': command||approved,
     'uniforme': command||approved,
+    'localizacoes': command||approved,
     'sugestoes': command||approved,
     'liberacao-delta': command||approved,
     'ausencia': command||approved,
@@ -1401,6 +1403,7 @@ const discordModules={
   desligamento:{title:'DESLIGAMENTO',eyebrow:'ADMINISTRATIVO',desc:'Histórico de desligamentos e exonerações.',key:'desligamento'},
   badges:{title:'BADGES',eyebrow:'ADMINISTRATIVO',desc:'Condecorações e distintivos vinculados aos pilotos.',key:'badges'},
   'bate-ponto':{title:'BATE-PONTO',eyebrow:'ADMINISTRATIVO',desc:'Registre entrada e saída e consulte suas horas.',key:'bate-ponto'},
+  localizacoes:{title:'LOCALIZAÇÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Locais e referências úteis para a operação.',key:'localizacoes'},
   sugestoes:{title:'SUGESTÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Envie sugestões ao Comando e acompanhe respostas.',key:'sugestoes'},
   'liberacao-delta':{title:'LIBERAÇÃO-DELTA',eyebrow:'INFORMAÇÕES GERAIS',desc:'Orientações e informações sobre liberação e deslocamento da unidade.',key:'liberacao-delta'},
   uniforme:{title:'UNIFORME',eyebrow:'INFORMAÇÕES GERAIS',desc:'Consulte o padrão de uniforme e peças cadastradas.',key:'uniforme'},
@@ -1419,7 +1422,7 @@ async function openDiscordModule(module){
   if(!body)return;
   document.querySelectorAll('.discord-nav').forEach(a=>a.classList.toggle('active',a.dataset.module===module));
   body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim)">Carregando...</div>';
-  if(['comunicados','avisos','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
+  if(['comunicados','avisos','localizacoes','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
   if(module==='documentacao') return loadDiscordContent('documentacao',body);
   if(module==='promovidos') return loadPromovidos(body);
   if(module==='advertencias') return loadAdvertencias(body);

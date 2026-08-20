@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS exoneracoes (
   motivo TEXT NOT NULL,
   responsavel_tipo TEXT NOT NULL,
   responsavel_id INTEGER,
-  observacoes TEXT,
   ocorrido_em TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -91,20 +90,17 @@ const migrations = [
   [`candidaturas`, `idade_ic`, `ALTER TABLE candidaturas ADD COLUMN idade_ic TEXT`],
   [`candidaturas`, `disponibilidade`, `ALTER TABLE candidaturas ADD COLUMN disponibilidade TEXT`],
   [`candidaturas`, `usuario_id`, `ALTER TABLE candidaturas ADD COLUMN usuario_id INTEGER`],
-  [`users`, `cargo_delta`, `ALTER TABLE users ADD COLUMN cargo_delta TEXT NOT NULL DEFAULT 'CANDIDATO'`],
+  [`users`, `cargo_delta`, `ALTER TABLE users ADD COLUMN cargo_delta TEXT NOT NULL DEFAULT 'PILOTO PROBATORIO'`],
   [`users`, `inscricao_enviada`, `ALTER TABLE users ADD COLUMN inscricao_enviada INTEGER NOT NULL DEFAULT 0`],
   [`users`, `status_conta`, `ALTER TABLE users ADD COLUMN status_conta TEXT NOT NULL DEFAULT 'ATIVA'`],
   [`apreensoes`, `id_pessoa`, `ALTER TABLE apreensoes ADD COLUMN id_pessoa TEXT NOT NULL DEFAULT ''`],
-  [`apreensoes`, `imagem_url`, `ALTER TABLE apreensoes ADD COLUMN imagem_url TEXT`],
-  [`exoneracoes`, `observacoes`, `ALTER TABLE exoneracoes ADD COLUMN observacoes TEXT`]
+  [`apreensoes`, `imagem_url`, `ALTER TABLE apreensoes ADD COLUMN imagem_url TEXT`]
 ];
 for (const [table, column, sql] of migrations) {
   if (!(await hasColumn(table, column))) await db.exec(sql);
 }
 
 await db.run("UPDATE users SET status_conta = 'ATIVA' WHERE status_conta IS NULL OR TRIM(status_conta) = ''");
-// Contas sem candidatura ativa/histórico entram como CANDIDATO; pilotos já aprovados preservam o cargo.
-await db.run(`UPDATE users SET cargo_delta='CANDIDATO' WHERE UPPER(COALESCE(cargo_delta,''))='PILOTO PROBATORIO' AND id NOT IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL AND status='APROVADO') AND id NOT IN (SELECT DISTINCT usuario_id FROM candidaturas_historico WHERE usuario_id IS NOT NULL AND status='APROVADO')`);
 await db.run("UPDATE users SET cargo_delta = 'PILOTO PROBATORIO' WHERE cargo_delta IS NULL OR TRIM(cargo_delta) = ''");
 await db.run("UPDATE users SET inscricao_enviada = 1 WHERE id IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL)");
 

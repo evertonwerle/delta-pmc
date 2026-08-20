@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   nome TEXT NOT NULL,
-  cargo_delta TEXT NOT NULL DEFAULT 'CANDIDATO',
+  cargo_delta TEXT NOT NULL DEFAULT 'PILOTO PROBATORIO',
   ativo INTEGER NOT NULL DEFAULT 1,
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   ultimo_login TEXT,
@@ -146,7 +146,6 @@ CREATE TABLE IF NOT EXISTS exoneracoes (
   motivo TEXT NOT NULL,
   responsavel_tipo TEXT NOT NULL,
   responsavel_id INTEGER,
-  observacoes TEXT,
   ocorrido_em TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE SET NULL
 );
