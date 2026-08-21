@@ -1,7 +1,7 @@
 const db = require('../database');
 
 const COMANDO = ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'];
-const PILOTO_CARGOS = ['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
+const PILOTO_CARGOS = ['PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
 
 module.exports = async function pilotoAprovado(req, res, next) {
   const id = req.session?.user?.id;

@@ -3,10 +3,10 @@ const db=require('../database');
 const login=require('../middleware/login');
 const {isCommand,isApproved,requireContentManager,requireCommand}=require('../middleware/access');
 const router=express.Router();
-const KEYS=['comunicados','avisos','documentacao','localizacoes','liberacao-delta'];
+const KEYS=['comunicados','avisos','documentacao','liberacao-delta'];
 function actor(req){if(req.session?.admin)return {tipo:'ADMINISTRADOR',id:req.session.admin.id,nome:req.session.admin.nome||req.session.admin.username};return {tipo:String(req.session.user?.cargo||'USUARIO').toUpperCase(),id:req.session.user?.id,nome:req.session.user?.nome||req.session.user?.username};}
 async function log(req,acao,entidade,id,detalhes=''){const a=actor(req);await db.run(`INSERT INTO logs_sistema(usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?,?,?)`,[a.tipo,a.id,a.nome,acao,entidade,id||null,detalhes]);}
-async function canRead(key,req){if(['comunicados','avisos'].includes(key))return isCommand(req);return await isCommand(req)||await isApproved(req);}
+async function canRead(key,req){return await isCommand(req)||await isApproved(req);}
 router.get('/suggestions/mine',login,async (req,res)=>res.json({sugestoes:await db.all(`SELECT * FROM sugestoes WHERE usuario_id=? ORDER BY id DESC`,[req.session.user?.id||0])}));
 router.post('/suggestions',login,async (req,res)=>{if(!req.session.user)return res.status(403).json({erro:'Faça login como usuário.'});const texto=String(req.body?.texto||'').trim();if(texto.length<5)return res.status(400).json({erro:'A sugestão precisa ter pelo menos 5 caracteres.'});const r=await db.run('INSERT INTO sugestoes(usuario_id,texto) VALUES(?,?)',[req.session.user.id,texto]);await log(req,'NOVA SUGESTÃO','SUGESTAO',r.lastInsertRowid,texto.slice(0,200));res.status(201).json({sucesso:true,id:Number(r.lastInsertRowid)});});
 router.get('/suggestions/all',requireCommand,async (req,res)=>res.json({sugestoes:await db.all(`SELECT s.*,u.nome,u.username FROM sugestoes s JOIN users u ON u.id=s.usuario_id ORDER BY s.id DESC`)}));

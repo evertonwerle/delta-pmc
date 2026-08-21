@@ -13,8 +13,7 @@ const CARGOS = [
   'PILOTO ESPECIALISTA',
   'PILOTO AVANÇADO',
   'PILOTO ASPIRANTE',
-  'PILOTO PROBATORIO',
-  'CANDIDATO'
+  'PILOTO PROBATORIO'
 ];
 
 router.get('/permissoes', async (req, res) => {
@@ -49,8 +48,7 @@ router.get('/', hierarchyAuth, async (req, res) => {
         WHEN 'PILOTO AVANÇADO' THEN 7
         WHEN 'PILOTO ASPIRANTE' THEN 8
         WHEN 'PILOTO PROBATORIO' THEN 9
-        WHEN 'CANDIDATO' THEN 10
-        ELSE 11
+        ELSE 10
       END,
       nome COLLATE NOCASE
   `);
@@ -202,12 +200,9 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
     const id = Number(req.params.id);
     const nivel = String(req.body?.nivel || '').trim().toUpperCase();
     const motivo = String(req.body?.motivo || '').trim();
-    const observacoes = String(req.body?.observacoes || '').trim();
-    const dataDesligamento = String(req.body?.data_desligamento || '').trim();
     const niveis = ['ABANDONO_DE_POSTO','INSUBORDINACAO','CONDUTA_INADEQUADA','BAIXA_ATIVIDADE','OUTROS'];
     if (!niveis.includes(nivel)) return res.status(400).json({ erro: 'Selecione um nível de exoneração válido.' });
     if (motivo.length < 3) return res.status(400).json({ erro: 'Informe o motivo/detalhamento da exoneração.' });
-    if (!dataDesligamento) return res.status(400).json({ erro: 'Informe a data do desligamento.' });
 
     const user = await db.get(`
       SELECT u.id, u.nome, u.username, u.cargo_delta, u.ativo,
@@ -215,10 +210,8 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
       FROM users u WHERE u.id = ? LIMIT 1
     `, [id]);
     if (!user) return res.status(404).json({ erro: 'Usuário não encontrado.' });
-    const cargoUsuario = String(user.cargo_delta || '').toUpperCase();
-    const cargosPiloto = ['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
-    if (!cargosPiloto.includes(cargoUsuario) && String(user.candidatura_status || '').toUpperCase() !== 'APROVADO') {
-      return res.status(400).json({ erro: 'Somente candidatos aprovados ou pilotos podem ser exonerados.' });
+    if (String(user.candidatura_status || '').toUpperCase() !== 'APROVADO') {
+      return res.status(400).json({ erro: 'Somente pilotos com candidatura aprovada podem ser exonerados.' });
     }
     if (['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(user.cargo_delta || '').toUpperCase())) {
       return res.status(400).json({ erro: 'Contas de comando não podem ser exoneradas por esta função.' });
@@ -226,16 +219,14 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
 
     await db.run(`
       INSERT INTO exoneracoes
-      (usuario_id, nome, username, cargo_no_momento, nivel, motivo, observacoes, data_desligamento, responsavel_tipo, responsavel_id, ocorrido_em)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      (usuario_id, nome, username, cargo_no_momento, nivel, motivo, responsavel_tipo, responsavel_id, ocorrido_em)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `, [
       user.id, user.nome, user.username, user.cargo_delta || 'PILOTO',
-      nivel, motivo, observacoes, dataDesligamento,
+      nivel, motivo,
       req.session.admin ? 'ADMIN' : String(req.session.user?.cargo || 'GESTOR').toUpperCase(),
       req.session.admin?.id ?? req.session.user?.id ?? null
     ]);
-
-    await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`,[req.session.admin?'ADMINISTRADOR':String(req.session.user?.cargo||'GESTOR').toUpperCase(),req.session.admin?.id??req.session.user?.id??null,req.session.admin?.nome||req.session.user?.nome||req.session.user?.username||'', 'DESLIGAMENTO REGISTRADO','EXONERACAO',id,JSON.stringify({piloto:user.nome,cargo:user.cargo_delta,data_desligamento:dataDesligamento,motivo,observacoes})]);
 
     // Fecha a candidatura aprovada atual sem apagar o histórico. Assim, o
     // exonerado poderá iniciar um novo edital no futuro.
@@ -263,9 +254,7 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
       sucesso: true,
       mensagem: `${user.nome} foi exonerado. A conta permanece registrada e poderá retornar ao processo seletivo no futuro.`,
       nivel,
-      motivo,
-      observacoes,
-      data_desligamento: dataDesligamento
+      motivo
     });
   } catch (error) {
     console.error(error);
@@ -276,7 +265,7 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
 
 router.patch('/usuarios/:id/banir', async (req,res)=>{
   try{
-    if(!await canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem banir permanentemente.'});
+    if(!await canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem banir permanentemente.'});
     const id=Number(req.params.id), motivo=String(req.body?.motivo||'').trim();
     if(motivo.length<3) return res.status(400).json({erro:'Informe o motivo do banimento.'});
     const u=await db.get(`SELECT id,nome,username,cargo_delta FROM users WHERE id=?`,[id]); if(!u)return res.status(404).json({erro:'Usuário não encontrado.'});
@@ -286,24 +275,6 @@ router.patch('/usuarios/:id/banir', async (req,res)=>{
     await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes) VALUES (?,?,?,?,?,?,?)`,[r.tipo,r.id,r.nome,'BANIMENTO PERMANENTE','USUARIO',id,motivo]);
     res.json({sucesso:true,mensagem:`${u.nome} foi banido permanentemente.`});
   }catch(e){console.error(e);res.status(500).json({erro:'Não foi possível banir o usuário.'});}
-});
-
-router.get('/desligamentos', async (req, res) => {
-  try {
-    if (!req.session?.admin && !req.session?.user?.id) {
-      return res.status(401).json({ erro: 'Faça login para consultar os desligamentos.' });
-    }
-    const rows = await db.all(`
-      SELECT e.id, e.usuario_id, e.nome, e.username, e.cargo_no_momento,
-             e.nivel, e.motivo, e.responsavel_tipo, e.responsavel_id, e.ocorrido_em
-      FROM exoneracoes e
-      ORDER BY e.ocorrido_em DESC, e.id DESC
-    `);
-    res.json({ desligamentos: rows });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ erro: 'Não foi possível carregar os desligamentos.' });
-  }
 });
 
 router.get('/usuarios/:id/exoneracoes', async (req, res) => {
@@ -324,10 +295,10 @@ router.get('/usuarios/:id/exoneracoes', async (req, res) => {
   }
 });
 
-router.delete('/usuarios/:id', async (req, res) => {
+router.delete('/usuarios/:id', hierarchyAuth, async (req, res) => {
   try {
     if (!await canManageApprovedPilot(req)) {
-      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem deletar pilotos aprovados.' });
+      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem deletar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
     const user = await db.get(`

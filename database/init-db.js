@@ -90,7 +90,7 @@ const migrations = [
   [`candidaturas`, `idade_ic`, `ALTER TABLE candidaturas ADD COLUMN idade_ic TEXT`],
   [`candidaturas`, `disponibilidade`, `ALTER TABLE candidaturas ADD COLUMN disponibilidade TEXT`],
   [`candidaturas`, `usuario_id`, `ALTER TABLE candidaturas ADD COLUMN usuario_id INTEGER`],
-  [`users`, `cargo_delta`, `ALTER TABLE users ADD COLUMN cargo_delta TEXT NOT NULL DEFAULT 'CANDIDATO'`],
+  [`users`, `cargo_delta`, `ALTER TABLE users ADD COLUMN cargo_delta TEXT NOT NULL DEFAULT 'PILOTO PROBATORIO'`],
   [`users`, `inscricao_enviada`, `ALTER TABLE users ADD COLUMN inscricao_enviada INTEGER NOT NULL DEFAULT 0`],
   [`users`, `status_conta`, `ALTER TABLE users ADD COLUMN status_conta TEXT NOT NULL DEFAULT 'ATIVA'`],
   [`apreensoes`, `id_pessoa`, `ALTER TABLE apreensoes ADD COLUMN id_pessoa TEXT NOT NULL DEFAULT ''`],
@@ -101,38 +101,8 @@ for (const [table, column, sql] of migrations) {
 }
 
 await db.run("UPDATE users SET status_conta = 'ATIVA' WHERE status_conta IS NULL OR TRIM(status_conta) = ''");
-// Contas sem candidatura ativa/histórico entram como CANDIDATO; pilotos já aprovados preservam o cargo.
-await db.run(`UPDATE users SET cargo_delta='CANDIDATO' WHERE UPPER(COALESCE(cargo_delta,''))='PILOTO PROBATORIO' AND id NOT IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL AND status='APROVADO') AND id NOT IN (SELECT DISTINCT usuario_id FROM candidaturas_historico WHERE usuario_id IS NOT NULL AND status='APROVADO')`);
 await db.run("UPDATE users SET cargo_delta = 'PILOTO PROBATORIO' WHERE cargo_delta IS NULL OR TRIM(cargo_delta) = ''");
 await db.run("UPDATE users SET inscricao_enviada = 1 WHERE id IN (SELECT DISTINCT usuario_id FROM candidaturas WHERE usuario_id IS NOT NULL)");
-
-const extraMigrations = [
-  ['exoneracoes','observacoes',`ALTER TABLE exoneracoes ADD COLUMN observacoes TEXT`],
-  ['exoneracoes','data_desligamento',`ALTER TABLE exoneracoes ADD COLUMN data_desligamento TEXT`],
-  ['relatorios_acoes','status',`ALTER TABLE relatorios_acoes ADD COLUMN status TEXT NOT NULL DEFAULT 'PENDENTE'`],
-  ['relatorios_acoes','analisado_por_tipo',`ALTER TABLE relatorios_acoes ADD COLUMN analisado_por_tipo TEXT`],
-  ['relatorios_acoes','analisado_por_id',`ALTER TABLE relatorios_acoes ADD COLUMN analisado_por_id INTEGER`],
-  ['relatorios_acoes','analisado_por_nome',`ALTER TABLE relatorios_acoes ADD COLUMN analisado_por_nome TEXT`],
-  ['relatorios_acoes','analisado_em',`ALTER TABLE relatorios_acoes ADD COLUMN analisado_em TEXT`],
-  ['relatorios_acoes','motivo_recusa',`ALTER TABLE relatorios_acoes ADD COLUMN motivo_recusa TEXT`]
-];
-for (const [table, column, sql] of extraMigrations) {
-  if (!(await hasColumn(table, column))) await db.exec(sql);
-}
-await db.exec(`
-CREATE TABLE IF NOT EXISTS badge_solicitacoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, nome TEXT NOT NULL, descricao TEXT,
-  imagem_url TEXT, status TEXT NOT NULL DEFAULT 'PENDENTE', motivo_recusa TEXT,
-  analisado_por_tipo TEXT, analisado_por_id INTEGER, analisado_por_nome TEXT, analisado_em TEXT,
-  criado_em TEXT NOT NULL DEFAULT (datetime('now')), atualizado_em TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_badge_solicitacoes_usuario ON badge_solicitacoes(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_badge_solicitacoes_status ON badge_solicitacoes(status);
-`);
-await db.run("UPDATE relatorios_acoes SET status='PENDENTE' WHERE status IS NULL OR TRIM(status)=''");
-await db.run("UPDATE exoneracoes SET data_desligamento=COALESCE(data_desligamento, ocorrido_em) WHERE data_desligamento IS NULL OR TRIM(data_desligamento)=''");
-
 
 await db.exec(`
 CREATE TABLE IF NOT EXISTS portal_conteudos (

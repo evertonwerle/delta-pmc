@@ -1,5 +1,5 @@
 const db = require('../database');
-const TOP_CONTENT_CARGOS = ['GESTOR', 'SUB-GESTOR'];
+const TOP_CONTENT_CARGOS = ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'];
 
 async function canEditContent(req) {
   if (req.session?.admin) return true;
@@ -12,7 +12,7 @@ async function canEditContent(req) {
 }
 
 module.exports = async function contentAuth(req, res, next) {
-  if (!await canEditContent(req)) return res.status(403).json({ erro: 'Somente GESTOR e SUB-GESTOR podem editar, adicionar ou excluir conteúdo.' });
+  if (!await canEditContent(req)) return res.status(403).json({ erro: 'Somente GESTOR, SUB-GESTOR e COORDENADOR podem editar, adicionar ou excluir conteúdo.' });
   next();
 };
 module.exports.canEditContent = canEditContent;

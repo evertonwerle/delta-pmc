@@ -651,7 +651,7 @@ input[type="checkbox"], input[type="radio"]{
 .discord-channel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.discord-channel-card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:13px}.discord-channel-card h4{margin:0 0 5px;font-size:12px}.discord-channel-card p{margin:0;color:var(--text-dim);font-size:11px;line-height:1.5}.discord-list{display:flex;flex-direction:column;gap:7px;max-height:560px;overflow:auto}.discord-row{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--panel)}.discord-row-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.discord-row small{color:var(--text-faint);font-size:9px}.discord-row p{margin:5px 0 0;color:var(--text-dim);font-size:11px;white-space:pre-wrap;line-height:1.5}.discord-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.discord-section-title{font-size:10px;letter-spacing:1.5px;color:var(--text-faint);font-weight:800;margin-bottom:10px}@media(max-width:760px){.discord-channel-grid,.discord-form-grid{grid-template-columns:1fr}}
 
 .discord-external-link{color:var(--accent,#2d9cff);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;word-break:break-all;cursor:pointer}.discord-external-link:hover{opacity:.85}
-</style></head>
+</style><style id="cargo-save-status-v39">.cargo-save-status{font-size:9px;letter-spacing:.45px;min-width:105px;color:var(--text-faint)}.cargo-save-status[data-state="loading"]{color:var(--text-dim)}.cargo-save-status[data-state="success"]{color:#86efac;font-weight:700}.cargo-save-status[data-state="error"]{color:#fca5a5;font-weight:700}</style></head>
 <body class="auth-locked">
 
 <!-- ================ LOGIN ================ -->
@@ -707,18 +707,17 @@ input[type="checkbox"], input[type="radio"]{
     <a data-page="etapa3" id="nav-etapa3" class="stage-nav" hidden>🔢 Etapa 3</a>
     <a data-page="apostila" id="nav-apostila" style="display:none;">📚 Apostila de Estudo</a>
     <a data-page="manual" id="nav-manual" style="display:none;">📖 Manual da Delta</a>
-    <div class="nav-group-label command-only" id="nav-group-administrativo">ADMINISTRATIVO</div>
-    <a class="command-only discord-nav" data-page="discord" data-module="comunicados" style="display:none;">📢 Comunicados</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="avisos" style="display:none;">📋 Avisos de Curso</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="documentacao" style="display:none;">📚 Documentação</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="promovidos" style="display:none;">🏆 Promovidos</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="advertencias" style="display:none;">🛑 Advertências</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="bate-ponto" style="display:none;">📋 Bate-Ponto</a>
-    <a class="command-only discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
+    <div class="nav-group-label command-or-pilot" id="nav-group-administrativo">ADMINISTRATIVO</div>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="comunicados" style="display:none;">📢 Comunicados</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="avisos" style="display:none;">📋 Avisos de Curso</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="documentacao" style="display:none;">📚 Documentação</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="promovidos" style="display:none;">🏆 Promovidos</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="advertencias" style="display:none;">🛑 Advertências</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="bate-ponto" style="display:none;">📋 Bate-Ponto</a>
+    <a class="command-or-pilot discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
     <div class="nav-group-label command-or-pilot" id="nav-group-informacoes">INFORMAÇÕES GERAIS</div>
-    <a class="discord-nav command-or-pilot" data-page="discord" data-module="localizacoes" style="display:none;">📍 Localizações</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="sugestoes" style="display:none;">📄 Sugestões</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="liberacao-delta" style="display:none;">🚓 Liberação-DELTA</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="uniforme" style="display:none;">👕 Uniforme</a>
@@ -1382,11 +1381,17 @@ function setCommandNav(fullAdminAccess, approved){
   document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||approved)?'':'none');
   // Links que já possuem páginas próprias continuam sendo a referência principal.
   const moduleLinks={
+    'comunicados': command||approved,
+    'avisos': command||approved,
+    'documentacao': command||approved,
+    'promovidos': command||approved,
+    'advertencias': command||approved,
+    'desligamento': command||approved,
     'bate-ponto': command||approved,
+    'badges': command||approved,
     'apreensoes': command||approved,
     'acoes-fechadas': command||approved,
     'uniforme': command||approved,
-    'localizacoes': command||approved,
     'sugestoes': command||approved,
     'liberacao-delta': command||approved,
     'ausencia': command||approved,
@@ -1403,7 +1408,6 @@ const discordModules={
   desligamento:{title:'DESLIGAMENTO',eyebrow:'ADMINISTRATIVO',desc:'Histórico de desligamentos e exonerações.',key:'desligamento'},
   badges:{title:'BADGES',eyebrow:'ADMINISTRATIVO',desc:'Condecorações e distintivos vinculados aos pilotos.',key:'badges'},
   'bate-ponto':{title:'BATE-PONTO',eyebrow:'ADMINISTRATIVO',desc:'Registre entrada e saída e consulte suas horas.',key:'bate-ponto'},
-  localizacoes:{title:'LOCALIZAÇÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Locais e referências úteis para a operação.',key:'localizacoes'},
   sugestoes:{title:'SUGESTÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Envie sugestões ao Comando e acompanhe respostas.',key:'sugestoes'},
   'liberacao-delta':{title:'LIBERAÇÃO-DELTA',eyebrow:'INFORMAÇÕES GERAIS',desc:'Orientações e informações sobre liberação e deslocamento da unidade.',key:'liberacao-delta'},
   uniforme:{title:'UNIFORME',eyebrow:'INFORMAÇÕES GERAIS',desc:'Consulte o padrão de uniforme e peças cadastradas.',key:'uniforme'},
@@ -1422,7 +1426,7 @@ async function openDiscordModule(module){
   if(!body)return;
   document.querySelectorAll('.discord-nav').forEach(a=>a.classList.toggle('active',a.dataset.module===module));
   body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim)">Carregando...</div>';
-  if(['comunicados','avisos','localizacoes','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
+  if(['comunicados','avisos','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
   if(module==='documentacao') return loadDiscordContent('documentacao',body);
   if(module==='promovidos') return loadPromovidos(body);
   if(module==='advertencias') return loadAdvertencias(body);
@@ -1589,7 +1593,7 @@ async function loadMinhaSituacao(){
     setSituacaoNav(true); card.style.display='block';
     document.getElementById('situacao-nome').textContent=j.personagem||'Candidato';
     const status=String(j.status||'PENDENTE').toUpperCase();
-    const aprovado=status==='APROVADO';
+    const aprovado=status==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     setHallAccess(aprovado);
     if(currentRole==='user') setStudyAccess({manual:aprovado, apostila:true});
@@ -1626,7 +1630,7 @@ async function syncInscricaoAccess(){
     const canApply = !j.inscricao_enviada || !j.encontrada;
     window.inscricaoEnviada = !canApply;
     setInscricaoNav(canApply);
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     setSituacaoNav(!canApply && j.encontrada && !aprovado);
     if(!canApply && j.encontrada && !aprovado) loadMinhaSituacao();
@@ -1688,7 +1692,7 @@ async function syncStageAccess(idOverride){
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setStageNav(0); return 0; }
     const j=await r.json();
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     if(aprovado){
       setStageNav(0);
@@ -1742,6 +1746,9 @@ function showRegister(){
 function setAuthError(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 function setAuthSuccess(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 
+const PILOTO_CARGOS_FRONT=['PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
+function isPilotCargo(cargo){return PILOTO_CARGOS_FRONT.includes(String(cargo||'').trim().toUpperCase());}
+
 function applyRole(role, profile, initialNavigation=false){
   currentRole=role;
   currentCargo=String(profile?.cargo || '').toUpperCase();
@@ -1754,13 +1761,16 @@ function applyRole(role, profile, initialNavigation=false){
   document.getElementById('session-user-name').textContent=profile?.nome || profile?.username || '';
 
   const fullAdminAccess = role==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(currentCargo);
+  const approvedPilot = role==='user' && (profile?.aprovado===true || isPilotCargo(currentCargo));
   const adminBtn=document.getElementById('admin-nav-button');
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
-  setCommandNav(fullAdminAccess, profile?.aprovado===true);
+  setCommandNav(fullAdminAccess, approvedPilot);
 
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
-    const allowed=fullAdminAccess || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
+    const allowed=fullAdminAccess || (approvedPilot
+      ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord'].includes(page)
+      : ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3','edital'].includes(page));
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){
@@ -1776,7 +1786,14 @@ function applyRole(role, profile, initialNavigation=false){
     if(relNav) relNav.style.display='';
     if(vtrNav) vtrNav.style.display='';
   }
-  if(!fullAdminAccess) setSituacaoNav(Boolean(profile?.inscricao_enviada));
+  if(!fullAdminAccess) {
+    setSituacaoNav(Boolean(profile?.inscricao_enviada) && !approvedPilot);
+    if(approvedPilot){
+      setHallAccess(true);
+      setStudyAccess({manual:true, apostila:true});
+      setStageNav(0);
+    }
+  }
   // Para os cargos administrativos, as etapas também ficam visíveis para navegação e edição.
   if(fullAdminAccess){
     document.querySelectorAll('.stage-nav').forEach(a=>a.hidden=false);
@@ -1874,16 +1891,39 @@ async function loadMinhasApreensoes(){
   }
 }
 
+let hallApreensaoEnviando=false;
 async function registrarApreensao(){
   const msg=document.getElementById('hall-apr-msg');
+  const btn=document.querySelector('#page-hall button[onclick=\"registrarApreensao()\"]');
+  if(!msg || hallApreensaoEnviando) return;
   const body={
-    ocorrencia:document.getElementById('hall-apr-ocorrencia').value.trim(),
-    id_pessoa:document.getElementById('hall-apr-id-pessoa').value.trim(),
-    imagem_url:document.getElementById('hall-apr-imagem').value.trim(),
-    observacoes:document.getElementById('hall-apr-obs').value.trim()
+    ocorrencia:document.getElementById('hall-apr-ocorrencia')?.value.trim() || '',
+    id_pessoa:document.getElementById('hall-apr-id-pessoa')?.value.trim() || '',
+    imagem_url:document.getElementById('hall-apr-imagem')?.value.trim() || '',
+    observacoes:document.getElementById('hall-apr-obs')?.value.trim() || ''
   };
-  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;} if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
-  try{const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)});const j=await r.json();msg.textContent=r.ok?'Apreensão registrada com sucesso.':(j.erro||'Não foi possível registrar.');if(r.ok){document.getElementById('hall-apr-ocorrencia').value='';document.getElementById('hall-apr-id-pessoa').value='';document.getElementById('hall-apr-imagem').value='';document.getElementById('hall-apr-obs').value='';loadHall();}}catch(e){msg.textContent='Servidor indisponível.';}
+  msg.style.color='var(--text-dim)';
+  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;}
+  if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
+  if(!/^https?:\/\//i.test(body.imagem_url)){msg.textContent='O link da imagem precisa começar com http:// ou https://.';return;}
+  hallApreensaoEnviando=true;
+  if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='REGISTRANDO...';}
+  msg.textContent='Salvando apreensão...';
+  try{
+    const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){msg.style.color='#fca5a5';msg.textContent=j.erro||`Não foi possível registrar a apreensão (HTTP ${r.status}).`;return;}
+    msg.style.color='#86efac';msg.textContent='Apreensão registrada com sucesso.';
+    document.getElementById('hall-apr-ocorrencia').value='';
+    document.getElementById('hall-apr-id-pessoa').value='';
+    document.getElementById('hall-apr-imagem').value='';
+    document.getElementById('hall-apr-obs').value='';
+    await loadHall();
+  }catch(e){console.error('[DELTA] Erro ao registrar apreensão:',e);msg.style.color='#fca5a5';msg.textContent='Servidor indisponível. Verifique a conexão e tente novamente.';}
+  finally{
+    hallApreensaoEnviando=false;
+    if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'REGISTRAR APREENSÃO';}
+  }
 }
 async function baterPonto(tipo){
   const msg=document.getElementById('hall-ponto-msg');
@@ -2032,19 +2072,23 @@ async function loadUsuariosAdmin(){
 }
 async function salvarCargoAdmin(id){
   const select=document.getElementById(`admin-cargo-${id}`);
-  if(!select) return;
-  const cargo=select.value;
-  if(!(await deltaConfirm('Alterar cargo',`Deseja definir este usuário como ${cargo}?`,{danger:true}))) return;
+  if(!select)return;
+  const cargo=String(select.value||'').trim().toUpperCase();
+  const row=select.closest('tr');
+  const btn=row?.querySelector('button[onclick*="salvarCargoAdmin"]');
+  if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='SALVANDO...';}
+  select.disabled=true;
   try{
-    const r=await fetch(`/api/hierarquia/usuarios/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({cargo})});
+    const r=await fetch(`/api/admin/usuarios/${id}/cargo`,{method:'PUT',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','Cache-Control':'no-cache','X-Delta-Action':'set-cargo'},body:JSON.stringify({cargo})});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok){await deltaNotice('Erro',j.erro||'Não foi possível alterar o cargo.');return;}
-    await deltaNotice('Cargo atualizado',j.mensagem||'Cargo atualizado com sucesso.');
+    if(!r.ok||j.persistido!==true){await deltaNotice('Cargo não salvo',j.erro||`HTTP ${r.status}`);return;}
+    const confirmado=String(j.usuario?.cargo_delta||'').trim().toUpperCase();
+    if(confirmado!==cargo){await deltaNotice('Cargo não confirmado',`O banco retornou ${confirmado||'nenhum cargo'}.`);return;}
+    await deltaNotice('Cargo salvo',`Cargo de ${j.usuario?.nome||'usuário'} salvo como ${confirmado}.`);
     await loadUsuariosAdmin();
-    if(typeof loadHierarquia==='function') await loadHierarquia();
-  }catch(e){await deltaNotice('Erro','Não foi possível conectar ao servidor.');}
+  }catch(e){console.error(e);await deltaNotice('Erro','Não foi possível conectar ao servidor.');}
+  finally{if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'SALVAR CARGO';}select.disabled=false;}
 }
-
 async function abrirPerfilUsuarioAdmin(id){
   const box=document.getElementById('usuario-detalhe');if(!box)return;box.style.display='block';box.innerHTML='<div class="admin-table-wrap" style="padding:20px">Carregando perfil...</div>';
   try{const r=await fetch(`/api/admin/usuarios/${id}`,{credentials:'same-origin'}),j=await r.json();if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}const u=j.usuario||{};const total=j.pontos?.reduce((a,x)=>a+Number(x.segundos||0),0)||0;box.innerHTML=`<div class="admin-table-wrap" style="padding:20px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div class="eyebrow-line">PERFIL ADMINISTRATIVO</div><h3 style="margin:4px 0">${esc(u.nome)}</h3><div style="color:var(--text-dim);font-size:11px">@${esc(u.username)} • ID ${esc(u.id)} • ${esc(u.cargo_delta)}</div></div><button class="table-action" onclick="fecharPerfilUsuarioAdmin()">FECHAR</button></div><div class="admin-cards" style="margin:16px 0"><div class="admin-stat blue"><div class="label">HORAS DE PONTO</div><div class="value">${esc(formatHorasPiloto(total))}</div></div><div class="admin-stat"><div class="label">APREENSÕES</div><div class="value">${esc(j.apreensoes?.length||0)}</div></div><div class="admin-stat"><div class="label">HISTÓRICO DE CARGOS</div><div class="value">${esc(j.cargos?.length||0)}</div></div><div class="admin-stat"><div class="label">EXONERAÇÕES</div><div class="value">${esc(j.exoneracoes?.length||0)}</div></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px"><div class="admin-table-wrap" style="padding:14px"><div class="admin-table-head" style="padding:0 0 10px;border:0">HISTÓRICO DE CARGOS</div>${j.cargos?.length?j.cargos.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:11px"><strong>${esc(x.cargo_anterior||'—')} → ${esc(x.cargo_novo)}</strong><br>${esc(x.justificativa||'Sem justificativa')}<br><span style="color:var(--text-faint)">${esc(x.criado_em)}</span></div>`).join(''):'<span style="color:var(--text-dim);font-size:11px">Nenhuma alteração registrada.</span>'}</div><div class="admin-table-wrap" style="padding:14px"><div class="admin-table-head" style="padding:0 0 10px;border:0">EXONERAÇÕES</div>${j.exoneracoes?.length?j.exoneracoes.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:11px"><strong>${esc(x.nivel)}</strong> • ${esc(x.ocorrido_em)}<br>${esc(x.motivo)}</div>`).join(''):'<span style="color:var(--text-dim);font-size:11px">Nenhuma exoneração.</span>'}</div></div><div class="admin-table-wrap" style="margin-top:12px;padding:14px"><div class="admin-table-head" style="padding:0 0 10px;border:0">ATIVIDADE / LOGS</div><div style="overflow:auto"><table class="admin-table"><thead><tr><th>AÇÃO</th><th>ENTIDADE</th><th>DETALHES</th><th>DATA</th></tr></thead><tbody>${j.logs?.length?j.logs.map(x=>`<tr><td>${esc(x.acao)}</td><td>${esc(x.entidade||'-')} ${x.entidade_id?'#'+esc(x.entidade_id):''}</td><td>${esc(x.detalhes||'-')}</td><td>${esc(x.criado_em)}</td></tr>`).join(''):'<tr><td colspan="4" style="padding:18px;text-align:center;color:var(--text-dim)">Sem atividades.</td></tr>'}</tbody></table></div></div></div>`;box.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}
@@ -2482,7 +2526,7 @@ async function loadHierarquia(){
       const self=currentRole==='user' && Number(u.id)===Number(window.currentUserId||0);
       const disabled=self?'disabled':'';
       const aprovado=String(u.candidatura_status||'').toUpperCase()==='APROVADO';
-      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
+      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
       const aprovadoBadge=aprovado?'<span class="status-chip appr" style="margin-left:6px;">APROVADO</span>':'';
       const actions=aprovado && podeGerenciarAprovado && !self
         ? `<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
@@ -2496,7 +2540,7 @@ async function loadHierarquia(){
         <td><span class="hierarchy-badge">${esc(u.cargo_delta||'PILOTO PROBATORIO')}</span></td>
         <td><span class="hierarchy-status">${ativo?'ATIVO':'EXONERADO'}</span></td>
         <td><select class="hierarchy-select" id="cargo-${u.id}" ${disabled}>${options}</select></td>
-        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;"><button class="table-action" ${disabled} onclick="salvarHierarquia(${u.id})">SALVAR</button>${actions}</div></td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;"><button class="table-action" type="button" ${disabled} onclick="salvarHierarquia(${u.id})">SALVAR</button><span class="cargo-save-status" aria-live="polite"></span>${actions}</div></td>
       </tr>`;
     }).join('');
   }catch(e){ console.error(e); }
@@ -2505,28 +2549,32 @@ async function loadHierarquia(){
 async function salvarHierarquia(id){
   const select=document.getElementById(`cargo-${id}`);
   if(!select) return;
-  const cargo=select.value;
-  if(!(await deltaConfirm('Confirmação', `Alterar o cargo deste usuário para ${cargo}?`, {danger:true}))) return;
+  const cargo=String(select.value||'').trim().toUpperCase();
+  if(!cargo) return;
+  const row=select.closest('tr');
+  const botao=row?.querySelector('button[onclick*="salvarHierarquia"]');
+  const status=row?.querySelector('.cargo-save-status');
+  const setStatus=(text,type='info')=>{if(status){status.textContent=text;status.dataset.state=type;}};
+  if(botao){botao.disabled=true;botao.dataset.oldText=botao.textContent;botao.textContent='SALVANDO...';}
+  select.disabled=true; setStatus('GRAVANDO NO BANCO...','loading');
   try{
-    const r=await fetch(`/api/hierarquia/usuarios/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({cargo})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok){await deltaNotice('Aviso', j.erro||'Não foi possível salvar.');return;}
-    await deltaNotice('Aviso', `Cargo atualizado com sucesso.`);
-    await loadHierarquia();
-  }catch(e){await deltaNotice('Aviso', `Não foi possível conectar ao servidor.`);}
+    console.log('[DELTA] Salvando cargo',{id,cargo});
+    const r=await fetch(`/api/admin/usuarios/${id}/cargo`,{method:'PUT',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','Cache-Control':'no-cache','X-Delta-Action':'set-cargo'},body:JSON.stringify({cargo})});
+    const texto=await r.text(); let j={}; try{j=JSON.parse(texto||'{}')}catch(_){j={erro:texto||`HTTP ${r.status}`};}
+    console.log('[DELTA] Resposta cargo',r.status,j);
+    if(!r.ok||j.persistido!==true){const msg=j.erro||`HTTP ${r.status}`;setStatus(msg,'error');await deltaNotice('Cargo não salvo',msg);return;}
+    const confirmado=String(j.usuario?.cargo_delta||'').trim().toUpperCase();
+    if(confirmado!==cargo){setStatus('ERRO DE CONFIRMAÇÃO','error');await deltaNotice('Cargo não confirmado',`O servidor retornou ${confirmado||'nenhum cargo'} em vez de ${cargo}.`);return;}
+    const badge=row?.querySelector('.hierarchy-badge'); if(badge) badge.textContent=confirmado;
+    const statusConta=row?.querySelector('.hierarchy-status'); if(statusConta) statusConta.textContent='ATIVO';
+    setStatus(`✓ ${confirmado} SALVO`,'success');
+    await deltaNotice('Cargo salvo',`Cargo atualizado para ${confirmado}.`);
+    const vr=await fetch(`/api/admin/usuarios/${id}/cargo?confirmacao=${Date.now()}`,{credentials:'same-origin',cache:'no-store'});
+    const vj=await vr.json().catch(()=>({})); const cargoBanco=String(vj.usuario?.cargo_delta||'').trim().toUpperCase();
+    if(!vr.ok||cargoBanco!==cargo){setStatus('BANCO NÃO CONFIRMOU','error');await deltaNotice('Atenção','A consulta posterior não confirmou o cargo no banco.');return;}
+  }catch(e){console.error('[DELTA] Erro cargo',e);setStatus('ERRO DE CONEXÃO','error');await deltaNotice('Erro ao salvar cargo',e.message||'Falha de comunicação.');}
+  finally{if(botao){botao.disabled=false;botao.textContent=botao.dataset.oldText||'SALVAR';}select.disabled=false;}
 }
-
-async function deletarCandidatura(id){
-  abrirModalAcao({tipo:'deletar-candidatura',titulo:'Excluir candidatura',
-    subtitulo:'A conta continuará disponível para um novo edital',id:id});
-}
-
-
-async function exonerarPiloto(id){
-  abrirModalAcao({tipo:'exonerar',titulo:'Exonerar piloto',
-    subtitulo:'Registro disciplinar e desligamento da ativa',id:id});
-}
-
 async function verHistoricoExoneracao(id){
   try{
     const r=await fetch(`/api/hierarquia/usuarios/${id}/exoneracoes`,{credentials:'same-origin'});
@@ -2546,12 +2594,12 @@ async function deletarPilotoAprovado(id){
 }
 
 function canEditContent(){
-  return currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
+  return currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
 }
 function openContentModal(){ document.getElementById('content-modal').classList.add('show'); }
 function closeContentModal(){ document.getElementById('content-modal').classList.remove('show'); document.getElementById('context-content-msg').textContent=''; }
 async function openContextEditor(category,id,order){
-  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR e SUB-GESTOR podem editar este conteúdo.`); return; }
+  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR, SUB-GESTOR e COORDENADOR podem editar este conteúdo.`); return; }
   let d=null;
   if(id!=null) d=conteudoAdminCache.find(x=>Number(x.id)===Number(id));
   document.getElementById('context-content-id').value=d?d.id:'';
@@ -2868,7 +2916,7 @@ function abrirSucessoDelta(mensagem){
       document.getElementById('deltaModalCancel').onclick=()=>finish(null);
       document.getElementById('deltaModalOk').onclick=()=>{
         const el=document.getElementById('deltaModalValue');
-        let value=el?el.value:null; if(Array.isArray(opts.collect)){ const out={}; opts.collect.forEach(id=>{const e=document.getElementById(id); out[id]=e?e.value:null;}); value={primary:value,...out}; }
+        let value=el?el.value:(opts.confirmOnly?true:null); if(Array.isArray(opts.collect)){ const out={}; opts.collect.forEach(id=>{const e=document.getElementById(id); out[id]=e?e.value:null;}); value={primary:value,...out}; }
         if(opts.required && !String(value||'').trim()){
           const er=document.getElementById('deltaModalError');er.textContent=opts.requiredMessage||'Preencha o campo.';er.style.display='block';return;
         }
@@ -2882,7 +2930,7 @@ function abrirSucessoDelta(mensagem){
     });
   };
   window.deltaNotice=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Sistema DELTA',html:`<p style="margin:0;color:#cbd5e1">${esc(message)}</p>`,okText:opts.okText||'Fechar',danger:false});};
-  window.deltaConfirm=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Confirmação administrativa',html:`<div class="${opts.danger?'delta-ui-danger':'delta-ui-warn'}">${esc(message)}</div>`,okText:opts.okText||'Confirmar',danger:!!opts.danger});};
+  window.deltaConfirm=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Confirmação administrativa',html:`<div class="${opts.danger?'delta-ui-danger':'delta-ui-warn'}">${esc(message)}</div>`,okText:opts.okText||'Confirmar',danger:!!opts.danger,confirmOnly:true});};
 })();
 </script>
 

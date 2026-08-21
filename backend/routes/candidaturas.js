@@ -42,7 +42,7 @@ router.post('/', login.requireUser, async (req, res) => {
         [req.session.user.id, exoneracaoAnterior.id, novoId]
       );
     }
-    await db.run(`UPDATE users SET cargo_delta = 'CANDIDATO', inscricao_enviada = 1, ativo = 1, status_conta = 'ATIVA' WHERE id = ?`, [req.session.user.id]);
+    await db.run(`UPDATE users SET inscricao_enviada = 1, ativo = 1, status_conta = 'ATIVA' WHERE id = ?`, [req.session.user.id]);
     res.status(201).json({ sucesso: true, mensagem: exoneracaoAnterior ? 'Nova candidatura enviada. O retorno à ativa foi registrado e o histórico de exoneração foi preservado.' : 'Candidatura enviada com sucesso.' });
   } catch (error) {
     console.error(error);
@@ -85,49 +85,6 @@ router.get('/', adminAuth, async (req, res) => {
     ORDER BY c.id DESC
   `);
   res.json(rows);
-});
-
-router.patch('/:id/liberar-etapa', adminAuth, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const solicitada = Number(req.body?.etapa);
-    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ erro: 'Candidatura inválida.' });
-    if (!Number.isInteger(solicitada) || solicitada < 1 || solicitada > 3) {
-      return res.status(400).json({ erro: 'Etapa inválida. Escolha entre 1 e 3.' });
-    }
-    const atual = await db.get('SELECT id, personagem, id_jogador, etapa_liberada, status FROM candidaturas WHERE id = ? LIMIT 1', [id]);
-    if (!atual) return res.status(404).json({ erro: 'Candidatura não encontrada.' });
-    if (String(atual.status || 'PENDENTE').toUpperCase() !== 'PENDENTE') {
-      return res.status(400).json({ erro: 'Somente candidaturas pendentes podem receber novas etapas.' });
-    }
-    const atualLiberada = Number(atual.etapa_liberada || 0);
-    if (solicitada !== atualLiberada + 1) {
-      return res.status(400).json({ erro: `A próxima etapa disponível é a ${atualLiberada + 1}.` });
-    }
-    const responsavelId = req.session.admin?.id ?? null;
-    const responsavelNome = req.session.admin?.nome || req.session.user?.nome || req.session.admin?.username || req.session.user?.username || 'Sistema';
-    const result = await db.run(
-      `UPDATE candidaturas
-       SET etapa_liberada=?, etapa=?, atualizado_em=datetime('now'),
-           responsavel_id=COALESCE(?,responsavel_id)
-       WHERE id=? AND status='PENDENTE'`,
-      [solicitada, solicitada, responsavelId, id]
-    );
-    if (Number(result?.changes || 0) !== 1) return res.status(409).json({ erro: 'A etapa não pôde ser liberada.' });
-    try {
-      await db.run(`INSERT INTO logs_sistema (usuario_tipo,usuario_id,usuario_nome,acao,entidade,entidade_id,detalhes)
-        VALUES (?,?,?,?,?,?,?)`, [
-        String(req.session.admin?.cargo || req.session.user?.cargo || 'ADMINISTRADOR').toUpperCase(),
-        responsavelId, responsavelNome, 'LIBERACAO_ETAPA', 'CANDIDATURA', id,
-        `Candidato ${atual.personagem || atual.id_jogador}: etapa ${atualLiberada} -> ${solicitada}`
-      ]);
-    } catch (e) { console.error('[DELTA] Falha no log de liberação:', e); }
-    const confirmado = await db.get('SELECT id, etapa, etapa_liberada, status FROM candidaturas WHERE id=? LIMIT 1', [id]);
-    res.json({ sucesso:true, etapa_liberada:Number(confirmado?.etapa_liberada||0), candidatura:confirmado });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ erro: 'Não foi possível liberar a etapa.' });
-  }
 });
 
 router.patch('/:id', adminAuth, async (req, res) => {

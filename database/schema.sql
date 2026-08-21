@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   nome TEXT NOT NULL,
-  cargo_delta TEXT NOT NULL DEFAULT 'CANDIDATO',
+  cargo_delta TEXT NOT NULL DEFAULT 'PILOTO PROBATORIO',
   ativo INTEGER NOT NULL DEFAULT 1,
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   ultimo_login TEXT,
@@ -144,8 +144,6 @@ CREATE TABLE IF NOT EXISTS exoneracoes (
   cargo_no_momento TEXT,
   nivel TEXT NOT NULL DEFAULT 'OUTROS',
   motivo TEXT NOT NULL,
-  observacoes TEXT,
-  data_desligamento TEXT NOT NULL DEFAULT (datetime('now')),
   responsavel_tipo TEXT NOT NULL,
   responsavel_id INTEGER,
   ocorrido_em TEXT NOT NULL DEFAULT (datetime('now')),
@@ -173,7 +171,7 @@ CREATE TABLE IF NOT EXISTS logs_sistema (
 );
 CREATE TABLE IF NOT EXISTS vtrs (id INTEGER PRIMARY KEY AUTOINCREMENT,prefixo TEXT NOT NULL UNIQUE,modelo TEXT NOT NULL,placa TEXT,status TEXT NOT NULL DEFAULT 'DISPONIVEL',observacoes TEXT,criado_em TEXT NOT NULL DEFAULT (datetime('now')),atualizado_em TEXT NOT NULL DEFAULT (datetime('now')));CREATE INDEX IF NOT EXISTS idx_vtrs_status ON vtrs(status);
 CREATE TABLE IF NOT EXISTS relatorios_acoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, nome_acao TEXT NOT NULL, data_acao TEXT NOT NULL, veiculo1 TEXT, veiculo2 TEXT, daec TEXT NOT NULL, resultado TEXT NOT NULL, bo TEXT NOT NULL, quantidade_refens INTEGER NOT NULL DEFAULT 0, qra_negociador TEXT NOT NULL, observacoes TEXT, status TEXT NOT NULL DEFAULT 'PENDENTE', analisado_por_tipo TEXT, analisado_por_id INTEGER, analisado_por_nome TEXT, analisado_em TEXT, motivo_recusa TEXT, criado_em TEXT NOT NULL DEFAULT (datetime('now')), atualizado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, nome_acao TEXT NOT NULL, data_acao TEXT NOT NULL, veiculo1 TEXT, veiculo2 TEXT, daec TEXT NOT NULL, resultado TEXT NOT NULL, bo TEXT NOT NULL, quantidade_refens INTEGER NOT NULL DEFAULT 0, qra_negociador TEXT NOT NULL, observacoes TEXT, criado_em TEXT NOT NULL DEFAULT (datetime('now')), atualizado_em TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS relatorios_acoes_historico (
@@ -200,11 +198,6 @@ CREATE TABLE IF NOT EXISTS advertencias (
 CREATE TABLE IF NOT EXISTS ausencias (
   id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, inicio TEXT NOT NULL, fim TEXT, motivo TEXT NOT NULL, observacoes TEXT, responsavel_tipo TEXT NOT NULL, responsavel_id INTEGER, status TEXT NOT NULL DEFAULT 'PROGRAMADA', atualizado_em TEXT NOT NULL DEFAULT (datetime('now')), criado_em TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE
 );
-CREATE TABLE IF NOT EXISTS badge_solicitacoes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, nome TEXT NOT NULL, descricao TEXT, imagem_url TEXT, status TEXT NOT NULL DEFAULT 'PENDENTE', motivo_recusa TEXT, analisado_por_tipo TEXT, analisado_por_id INTEGER, analisado_por_nome TEXT, analisado_em TEXT, criado_em TEXT NOT NULL DEFAULT (datetime('now')), atualizado_em TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_badge_solicitacoes_usuario ON badge_solicitacoes(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_badge_solicitacoes_status ON badge_solicitacoes(status);
 CREATE TABLE IF NOT EXISTS badges (
   id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, nome TEXT NOT NULL, descricao TEXT, imagem_url TEXT, responsavel_tipo TEXT NOT NULL, responsavel_id INTEGER, criado_em TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE
 );
