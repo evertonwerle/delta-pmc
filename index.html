@@ -1759,8 +1759,13 @@ function applyRole(role, profile, initialNavigation=false){
   setCommandNav(fullAdminAccess, profile?.aprovado===true);
 
   document.querySelectorAll('#nav-links a').forEach(a=>{
+    // Os links de módulos Discord são controlados exclusivamente por
+    // setCommandNav(), que diferencia acesso de comando e acesso operacional
+    // dos pilotos. Não sobrescrever essa decisão aqui.
+    if(a.classList.contains('discord-nav')) return;
     const page=a.dataset.page;
-    const allowed=fullAdminAccess || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
+    const pilotPages=['hall','minhas-apreensoes','relatorios-acoes','vtrs'];
+    const allowed=fullAdminAccess || (pilotAccess && pilotPages.includes(page)) || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){
