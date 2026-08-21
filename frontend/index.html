@@ -1333,14 +1333,16 @@ function closeSidebar(){
 function goPage(name){
   if(!authReady) return;
   const privileged = currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
-  const userAllowed=['hall','minhas-apreensoes','relatorios-acoes','vtrs','discord','inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'];
+  const approvedPilot = currentRole==='user' && window.candidaturaAprovada===true;
+  const userAllowed = approvedPilot
+    ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord']
+    : ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3','edital'];
   if(!privileged){
     if(!userAllowed.includes(name)) return;
-    // Após a aprovação, o candidato deixa de fazer parte do processo seletivo.
-    // As abas de Situação e Etapas ficam indisponíveis para ele.
-    if(window.candidaturaAprovada===true && (name==='situacao' || name.startsWith('etapa'))) return;
-    if(name==='inscricao' && window.inscricaoEnviada===true) return;
-    if(name==='situacao' && window.situacaoLiberada!==true) return;
+    // Após a aprovação, o usuário deixa de fazer parte do processo seletivo.
+    if(approvedPilot && (name==='situacao' || name==='inscricao' || name.startsWith('etapa'))) return;
+    if(!approvedPilot && name==='inscricao' && window.inscricaoEnviada===true) return;
+    if(!approvedPilot && name==='situacao' && window.situacaoLiberada!==true) return;
     if(name==='manual' && window.manualLiberado!==true) return;
     if(name==='apostila' && window.apostilaLiberada!==true) return;
     if((name==='hall' || name==='minhas-apreensoes' || name==='relatorios-acoes' || name==='vtrs') && window.hallLiberado!==true) return;
@@ -1377,24 +1379,27 @@ document.querySelectorAll('#nav-links a').forEach(function(a){
 
 function setCommandNav(fullAdminAccess, approved){
   const command=!!fullAdminAccess;
-  document.querySelectorAll('.command-only').forEach(el=>el.style.display=command?'':'none');
-  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||approved)?'':'none');
+  const pilot=!!approved;
+  // O piloto aprovado pode consultar as áreas operacionais e administrativas
+  // de leitura. Os botões de edição continuam protegidos por discordCanManage().
+  document.querySelectorAll('.command-only').forEach(el=>el.style.display=(command||pilot)?'':'none');
+  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||pilot)?'':'none');
   // Links que já possuem páginas próprias continuam sendo a referência principal.
   const moduleLinks={
-    'comunicados': command||approved,
-    'avisos': command||approved,
-    'documentacao': command||approved,
-    'promovidos': command||approved,
-    'advertencias': command||approved,
-    'desligamento': command||approved,
-    'bate-ponto': command||approved,
-    'badges': command||approved,
-    'apreensoes': command||approved,
-    'acoes-fechadas': command||approved,
-    'uniforme': command||approved,
-    'sugestoes': command||approved,
-    'liberacao-delta': command||approved,
-    'ausencia': command||approved,
+    'comunicados': command||pilot,
+    'avisos': command||pilot,
+    'documentacao': command||pilot,
+    'promovidos': command||pilot,
+    'advertencias': command||pilot,
+    'desligamento': command||pilot,
+    'bate-ponto': command||pilot,
+    'badges': command||pilot,
+    'apreensoes': command||pilot,
+    'acoes-fechadas': command||pilot,
+    'uniforme': command||pilot,
+    'sugestoes': command||pilot,
+    'liberacao-delta': command||pilot,
+    'ausencia': command||pilot,
   };
   Object.entries(moduleLinks).forEach(([key,show])=>document.querySelectorAll(`[data-module="${key}"]`).forEach(el=>el.style.display=show?'':'none'));
 }
@@ -1762,9 +1767,12 @@ function applyRole(role, profile, initialNavigation=false){
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
   setCommandNav(fullAdminAccess, profile?.aprovado===true);
 
+  const approvedPilot = role==='user' && profile?.aprovado===true;
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
-    const allowed=fullAdminAccess || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
+    const allowed=fullAdminAccess || (approvedPilot
+      ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord'].includes(page)
+      : ['inscricao','situacao','edital','apostila','manual','etapa1','etapa2','etapa3'].includes(page));
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){

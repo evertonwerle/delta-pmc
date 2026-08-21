@@ -718,7 +718,6 @@ input[type="checkbox"], input[type="radio"]{
     <a class="command-only discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
     <div class="nav-group-label command-or-pilot" id="nav-group-informacoes">INFORMAÇÕES GERAIS</div>
-    <a class="discord-nav command-or-pilot" data-page="discord" data-module="localizacoes" style="display:none;">📍 Localizações</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="sugestoes" style="display:none;">📄 Sugestões</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="liberacao-delta" style="display:none;">🚓 Liberação-DELTA</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="uniforme" style="display:none;">👕 Uniforme</a>
@@ -1334,14 +1333,15 @@ function closeSidebar(){
 function goPage(name){
   if(!authReady) return;
   const privileged = currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
-  const userAllowed=['hall','minhas-apreensoes','relatorios-acoes','vtrs','discord','inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'];
+  const approvedPilot = currentRole==='user' && window.candidaturaAprovada===true;
+  const userAllowed = approvedPilot
+    ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord']
+    : ['inscricao','situacao','edital','apostila','manual','etapa1','etapa2','etapa3'];
   if(!privileged){
     if(!userAllowed.includes(name)) return;
-    // Após a aprovação, o candidato deixa de fazer parte do processo seletivo.
-    // As abas de Situação e Etapas ficam indisponíveis para ele.
-    if(window.candidaturaAprovada===true && (name==='situacao' || name.startsWith('etapa'))) return;
-    if(name==='inscricao' && window.inscricaoEnviada===true) return;
-    if(name==='situacao' && window.situacaoLiberada!==true) return;
+    if(approvedPilot && (name==='situacao' || name==='inscricao' || name.startsWith('etapa'))) return;
+    if(!approvedPilot && name==='inscricao' && window.inscricaoEnviada===true) return;
+    if(!approvedPilot && name==='situacao' && window.situacaoLiberada!==true) return;
     if(name==='manual' && window.manualLiberado!==true) return;
     if(name==='apostila' && window.apostilaLiberada!==true) return;
     if((name==='hall' || name==='minhas-apreensoes' || name==='relatorios-acoes' || name==='vtrs') && window.hallLiberado!==true) return;
@@ -1378,18 +1378,26 @@ document.querySelectorAll('#nav-links a').forEach(function(a){
 
 function setCommandNav(fullAdminAccess, approved){
   const command=!!fullAdminAccess;
-  document.querySelectorAll('.command-only').forEach(el=>el.style.display=command?'':'none');
-  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||approved)?'':'none');
-  // Links que já possuem páginas próprias continuam sendo a referência principal.
+  const pilot=!!approved;
+  document.querySelectorAll('.command-only').forEach(el=>el.style.display=(command||pilot)?'':'none');
+  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||pilot)?'':'none');
+  // Pilotos aprovados podem consultar as áreas administrativas/operacionais.
+  // A edição continua protegida por discordCanManage() e pelos middlewares do backend.
   const moduleLinks={
-    'bate-ponto': command||approved,
-    'apreensoes': command||approved,
-    'acoes-fechadas': command||approved,
-    'uniforme': command||approved,
-    'localizacoes': command||approved,
-    'sugestoes': command||approved,
-    'liberacao-delta': command||approved,
-    'ausencia': command||approved,
+    'comunicados': command||pilot,
+    'avisos': command||pilot,
+    'documentacao': command||pilot,
+    'promovidos': command||pilot,
+    'advertencias': command||pilot,
+    'desligamento': command||pilot,
+    'bate-ponto': command||pilot,
+    'badges': command||pilot,
+    'apreensoes': command||pilot,
+    'acoes-fechadas': command||pilot,
+    'uniforme': command||pilot,
+    'sugestoes': command||pilot,
+    'liberacao-delta': command||pilot,
+    'ausencia': command||pilot,
   };
   Object.entries(moduleLinks).forEach(([key,show])=>document.querySelectorAll(`[data-module="${key}"]`).forEach(el=>el.style.display=show?'':'none'));
 }
@@ -1403,7 +1411,6 @@ const discordModules={
   desligamento:{title:'DESLIGAMENTO',eyebrow:'ADMINISTRATIVO',desc:'Histórico de desligamentos e exonerações.',key:'desligamento'},
   badges:{title:'BADGES',eyebrow:'ADMINISTRATIVO',desc:'Condecorações e distintivos vinculados aos pilotos.',key:'badges'},
   'bate-ponto':{title:'BATE-PONTO',eyebrow:'ADMINISTRATIVO',desc:'Registre entrada e saída e consulte suas horas.',key:'bate-ponto'},
-  localizacoes:{title:'LOCALIZAÇÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Locais e referências úteis para a operação.',key:'localizacoes'},
   sugestoes:{title:'SUGESTÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Envie sugestões ao Comando e acompanhe respostas.',key:'sugestoes'},
   'liberacao-delta':{title:'LIBERAÇÃO-DELTA',eyebrow:'INFORMAÇÕES GERAIS',desc:'Orientações e informações sobre liberação e deslocamento da unidade.',key:'liberacao-delta'},
   uniforme:{title:'UNIFORME',eyebrow:'INFORMAÇÕES GERAIS',desc:'Consulte o padrão de uniforme e peças cadastradas.',key:'uniforme'},
@@ -1422,7 +1429,7 @@ async function openDiscordModule(module){
   if(!body)return;
   document.querySelectorAll('.discord-nav').forEach(a=>a.classList.toggle('active',a.dataset.module===module));
   body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim)">Carregando...</div>';
-  if(['comunicados','avisos','localizacoes','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
+  if(['comunicados','avisos','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
   if(module==='documentacao') return loadDiscordContent('documentacao',body);
   if(module==='promovidos') return loadPromovidos(body);
   if(module==='advertencias') return loadAdvertencias(body);
@@ -1758,9 +1765,12 @@ function applyRole(role, profile, initialNavigation=false){
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
   setCommandNav(fullAdminAccess, profile?.aprovado===true);
 
+  const approvedPilot = role==='user' && profile?.aprovado===true;
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
-    const allowed=fullAdminAccess || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
+    const allowed=fullAdminAccess || (approvedPilot
+      ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord'].includes(page)
+      : ['inscricao','situacao','edital','apostila','manual','etapa1','etapa2','etapa3'].includes(page));
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){
