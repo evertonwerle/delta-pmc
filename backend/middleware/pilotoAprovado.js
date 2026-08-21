@@ -1,6 +1,7 @@
 const db = require('../database');
 
 const COMANDO = ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'];
+const PILOTO_CARGOS = ['PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
 
 module.exports = async function pilotoAprovado(req, res, next) {
   const id = req.session?.user?.id;
@@ -25,7 +26,7 @@ module.exports = async function pilotoAprovado(req, res, next) {
   // Gestor, Sub-Gestor e Coordenador são usuários-piloto com acesso
   // operacional integral, mesmo que a candidatura original não esteja
   // mais marcada como APROVADO.
-  if (!eComando) {
+  if (!eComando && !PILOTO_CARGOS.includes(cargo)) {
     const aprovado = await db.get(
       "SELECT id FROM candidaturas WHERE usuario_id = ? AND status = 'APROVADO' LIMIT 1",
       [id]

@@ -189,13 +189,13 @@ router.get('/usuarios/:id/cargo', hierarchyAuth, async (req, res) => {
 async function canManageApprovedPilot(req) {
   if (req.session?.admin) return true;
   const cargo = await hierarchyAuth.cargoAtual(req);
-  return ['GESTOR', 'SUB-GESTOR'].includes(cargo);
+  return ['GESTOR', 'SUB-GESTOR', 'COORDENADOR'].includes(cargo);
 }
 
 router.patch('/usuarios/:id/exonerar', async (req, res) => {
   try {
     if (!await canManageApprovedPilot(req)) {
-      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem exonerar pilotos aprovados.' });
+      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem exonerar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
     const nivel = String(req.body?.nivel || '').trim().toUpperCase();
@@ -265,7 +265,7 @@ router.patch('/usuarios/:id/exonerar', async (req, res) => {
 
 router.patch('/usuarios/:id/banir', async (req,res)=>{
   try{
-    if(!await canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem banir permanentemente.'});
+    if(!await canManageApprovedPilot(req)) return res.status(403).json({erro:'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem banir permanentemente.'});
     const id=Number(req.params.id), motivo=String(req.body?.motivo||'').trim();
     if(motivo.length<3) return res.status(400).json({erro:'Informe o motivo do banimento.'});
     const u=await db.get(`SELECT id,nome,username,cargo_delta FROM users WHERE id=?`,[id]); if(!u)return res.status(404).json({erro:'Usuário não encontrado.'});
@@ -295,10 +295,10 @@ router.get('/usuarios/:id/exoneracoes', async (req, res) => {
   }
 });
 
-router.delete('/usuarios/:id', async (req, res) => {
+router.delete('/usuarios/:id', hierarchyAuth, async (req, res) => {
   try {
     if (!await canManageApprovedPilot(req)) {
-      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR e SUB-GESTOR podem deletar pilotos aprovados.' });
+      return res.status(403).json({ erro: 'Somente ADMINISTRADOR, GESTOR, SUB-GESTOR e COORDENADOR podem deletar pilotos aprovados.' });
     }
     const id = Number(req.params.id);
     const user = await db.get(`

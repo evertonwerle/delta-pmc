@@ -1333,16 +1333,14 @@ function closeSidebar(){
 function goPage(name){
   if(!authReady) return;
   const privileged = currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
-  const approvedPilot = currentRole==='user' && window.candidaturaAprovada===true;
-  const userAllowed = approvedPilot
-    ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord']
-    : ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3','edital'];
+  const userAllowed=['hall','minhas-apreensoes','relatorios-acoes','vtrs','discord','inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'];
   if(!privileged){
     if(!userAllowed.includes(name)) return;
-    // Após a aprovação, o usuário deixa de fazer parte do processo seletivo.
-    if(approvedPilot && (name==='situacao' || name==='inscricao' || name.startsWith('etapa'))) return;
-    if(!approvedPilot && name==='inscricao' && window.inscricaoEnviada===true) return;
-    if(!approvedPilot && name==='situacao' && window.situacaoLiberada!==true) return;
+    // Após a aprovação, o candidato deixa de fazer parte do processo seletivo.
+    // As abas de Situação e Etapas ficam indisponíveis para ele.
+    if(window.candidaturaAprovada===true && (name==='situacao' || name.startsWith('etapa'))) return;
+    if(name==='inscricao' && window.inscricaoEnviada===true) return;
+    if(name==='situacao' && window.situacaoLiberada!==true) return;
     if(name==='manual' && window.manualLiberado!==true) return;
     if(name==='apostila' && window.apostilaLiberada!==true) return;
     if((name==='hall' || name==='minhas-apreensoes' || name==='relatorios-acoes' || name==='vtrs') && window.hallLiberado!==true) return;
@@ -1379,27 +1377,24 @@ document.querySelectorAll('#nav-links a').forEach(function(a){
 
 function setCommandNav(fullAdminAccess, approved){
   const command=!!fullAdminAccess;
-  const pilot=!!approved;
-  // O piloto aprovado pode consultar as áreas operacionais e administrativas
-  // de leitura. Os botões de edição continuam protegidos por discordCanManage().
-  document.querySelectorAll('.command-only').forEach(el=>el.style.display=(command||pilot)?'':'none');
-  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||pilot)?'':'none');
+  document.querySelectorAll('.command-only').forEach(el=>el.style.display=command?'':'none');
+  document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||approved)?'':'none');
   // Links que já possuem páginas próprias continuam sendo a referência principal.
   const moduleLinks={
-    'comunicados': command||pilot,
-    'avisos': command||pilot,
-    'documentacao': command||pilot,
-    'promovidos': command||pilot,
-    'advertencias': command||pilot,
-    'desligamento': command||pilot,
-    'bate-ponto': command||pilot,
-    'badges': command||pilot,
-    'apreensoes': command||pilot,
-    'acoes-fechadas': command||pilot,
-    'uniforme': command||pilot,
-    'sugestoes': command||pilot,
-    'liberacao-delta': command||pilot,
-    'ausencia': command||pilot,
+    'comunicados': command||approved,
+    'avisos': command||approved,
+    'documentacao': command||approved,
+    'promovidos': command||approved,
+    'advertencias': command||approved,
+    'desligamento': command||approved,
+    'bate-ponto': command||approved,
+    'badges': command||approved,
+    'apreensoes': command||approved,
+    'acoes-fechadas': command||approved,
+    'uniforme': command||approved,
+    'sugestoes': command||approved,
+    'liberacao-delta': command||approved,
+    'ausencia': command||approved,
   };
   Object.entries(moduleLinks).forEach(([key,show])=>document.querySelectorAll(`[data-module="${key}"]`).forEach(el=>el.style.display=show?'':'none'));
 }
@@ -1598,7 +1593,7 @@ async function loadMinhaSituacao(){
     setSituacaoNav(true); card.style.display='block';
     document.getElementById('situacao-nome').textContent=j.personagem||'Candidato';
     const status=String(j.status||'PENDENTE').toUpperCase();
-    const aprovado=status==='APROVADO';
+    const aprovado=status==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     setHallAccess(aprovado);
     if(currentRole==='user') setStudyAccess({manual:aprovado, apostila:true});
@@ -1635,7 +1630,7 @@ async function syncInscricaoAccess(){
     const canApply = !j.inscricao_enviada || !j.encontrada;
     window.inscricaoEnviada = !canApply;
     setInscricaoNav(canApply);
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     setSituacaoNav(!canApply && j.encontrada && !aprovado);
     if(!canApply && j.encontrada && !aprovado) loadMinhaSituacao();
@@ -1697,7 +1692,7 @@ async function syncStageAccess(idOverride){
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setStageNav(0); return 0; }
     const j=await r.json();
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
     window.candidaturaAprovada=aprovado;
     if(aprovado){
       setStageNav(0);
@@ -1751,6 +1746,9 @@ function showRegister(){
 function setAuthError(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 function setAuthSuccess(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 
+const PILOTO_CARGOS_FRONT=['PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
+function isPilotCargo(cargo){return PILOTO_CARGOS_FRONT.includes(String(cargo||'').trim().toUpperCase());}
+
 function applyRole(role, profile, initialNavigation=false){
   currentRole=role;
   currentCargo=String(profile?.cargo || '').toUpperCase();
@@ -1763,16 +1761,16 @@ function applyRole(role, profile, initialNavigation=false){
   document.getElementById('session-user-name').textContent=profile?.nome || profile?.username || '';
 
   const fullAdminAccess = role==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(currentCargo);
+  const approvedPilot = role==='user' && (profile?.aprovado===true || isPilotCargo(currentCargo));
   const adminBtn=document.getElementById('admin-nav-button');
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
-  setCommandNav(fullAdminAccess, profile?.aprovado===true);
+  setCommandNav(fullAdminAccess, approvedPilot);
 
-  const approvedPilot = role==='user' && profile?.aprovado===true;
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
     const allowed=fullAdminAccess || (approvedPilot
       ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord'].includes(page)
-      : ['inscricao','situacao','edital','apostila','manual','etapa1','etapa2','etapa3'].includes(page));
+      : ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3','edital'].includes(page));
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){
@@ -1788,7 +1786,14 @@ function applyRole(role, profile, initialNavigation=false){
     if(relNav) relNav.style.display='';
     if(vtrNav) vtrNav.style.display='';
   }
-  if(!fullAdminAccess) setSituacaoNav(Boolean(profile?.inscricao_enviada));
+  if(!fullAdminAccess) {
+    setSituacaoNav(Boolean(profile?.inscricao_enviada) && !approvedPilot);
+    if(approvedPilot){
+      setHallAccess(true);
+      setStudyAccess({manual:true, apostila:true});
+      setStageNav(0);
+    }
+  }
   // Para os cargos administrativos, as etapas também ficam visíveis para navegação e edição.
   if(fullAdminAccess){
     document.querySelectorAll('.stage-nav').forEach(a=>a.hidden=false);
@@ -1886,16 +1891,39 @@ async function loadMinhasApreensoes(){
   }
 }
 
+let hallApreensaoEnviando=false;
 async function registrarApreensao(){
   const msg=document.getElementById('hall-apr-msg');
+  const btn=document.querySelector('#page-hall button[onclick=\"registrarApreensao()\"]');
+  if(!msg || hallApreensaoEnviando) return;
   const body={
-    ocorrencia:document.getElementById('hall-apr-ocorrencia').value.trim(),
-    id_pessoa:document.getElementById('hall-apr-id-pessoa').value.trim(),
-    imagem_url:document.getElementById('hall-apr-imagem').value.trim(),
-    observacoes:document.getElementById('hall-apr-obs').value.trim()
+    ocorrencia:document.getElementById('hall-apr-ocorrencia')?.value.trim() || '',
+    id_pessoa:document.getElementById('hall-apr-id-pessoa')?.value.trim() || '',
+    imagem_url:document.getElementById('hall-apr-imagem')?.value.trim() || '',
+    observacoes:document.getElementById('hall-apr-obs')?.value.trim() || ''
   };
-  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;} if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
-  try{const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)});const j=await r.json();msg.textContent=r.ok?'Apreensão registrada com sucesso.':(j.erro||'Não foi possível registrar.');if(r.ok){document.getElementById('hall-apr-ocorrencia').value='';document.getElementById('hall-apr-id-pessoa').value='';document.getElementById('hall-apr-imagem').value='';document.getElementById('hall-apr-obs').value='';loadHall();}}catch(e){msg.textContent='Servidor indisponível.';}
+  msg.style.color='var(--text-dim)';
+  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;}
+  if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
+  if(!/^https?:\/\//i.test(body.imagem_url)){msg.textContent='O link da imagem precisa começar com http:// ou https://.';return;}
+  hallApreensaoEnviando=true;
+  if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='REGISTRANDO...';}
+  msg.textContent='Salvando apreensão...';
+  try{
+    const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){msg.style.color='#fca5a5';msg.textContent=j.erro||`Não foi possível registrar a apreensão (HTTP ${r.status}).`;return;}
+    msg.style.color='#86efac';msg.textContent='Apreensão registrada com sucesso.';
+    document.getElementById('hall-apr-ocorrencia').value='';
+    document.getElementById('hall-apr-id-pessoa').value='';
+    document.getElementById('hall-apr-imagem').value='';
+    document.getElementById('hall-apr-obs').value='';
+    await loadHall();
+  }catch(e){console.error('[DELTA] Erro ao registrar apreensão:',e);msg.style.color='#fca5a5';msg.textContent='Servidor indisponível. Verifique a conexão e tente novamente.';}
+  finally{
+    hallApreensaoEnviando=false;
+    if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'REGISTRAR APREENSÃO';}
+  }
 }
 async function baterPonto(tipo){
   const msg=document.getElementById('hall-ponto-msg');
@@ -2498,7 +2526,7 @@ async function loadHierarquia(){
       const self=currentRole==='user' && Number(u.id)===Number(window.currentUserId||0);
       const disabled=self?'disabled':'';
       const aprovado=String(u.candidatura_status||'').toUpperCase()==='APROVADO';
-      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
+      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
       const aprovadoBadge=aprovado?'<span class="status-chip appr" style="margin-left:6px;">APROVADO</span>':'';
       const actions=aprovado && podeGerenciarAprovado && !self
         ? `<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
@@ -2566,12 +2594,12 @@ async function deletarPilotoAprovado(id){
 }
 
 function canEditContent(){
-  return currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
+  return currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
 }
 function openContentModal(){ document.getElementById('content-modal').classList.add('show'); }
 function closeContentModal(){ document.getElementById('content-modal').classList.remove('show'); document.getElementById('context-content-msg').textContent=''; }
 async function openContextEditor(category,id,order){
-  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR e SUB-GESTOR podem editar este conteúdo.`); return; }
+  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR, SUB-GESTOR e COORDENADOR podem editar este conteúdo.`); return; }
   let d=null;
   if(id!=null) d=conteudoAdminCache.find(x=>Number(x.id)===Number(id));
   document.getElementById('context-content-id').value=d?d.id:'';
