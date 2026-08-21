@@ -81,7 +81,7 @@ async function salvarCargoAdmin(req, res) {
   if (!await can(req)) return res.status(403).json({ sucesso:false, erro:'Acesso administrativo negado.' });
   const id = Number(req.params.id);
   const cargo = String(req.body?.cargo || '').trim().toUpperCase();
-  const cargos = ['GESTOR','SUB-GESTOR','COORDENADOR','PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
+  const cargos = ['GESTOR','SUB-GESTOR','COORDENADOR','PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO','CANDIDATO'];
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ sucesso:false, erro:'ID de usuário inválido.' });
   if (!cargos.includes(cargo)) return res.status(400).json({ sucesso:false, erro:`Cargo inválido: ${cargo || '(vazio)'}.` });
 

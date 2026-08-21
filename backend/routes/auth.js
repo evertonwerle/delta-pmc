@@ -29,11 +29,11 @@ router.post('/register', async (req, res) => {
 
     const hash = bcrypt.hashSync(String(senha), 10);
     const result = await db.run(
-      'INSERT INTO users (username, password_hash, nome, ativo, inscricao_enviada) VALUES (?, ?, ?, 1, 0)',
+      `INSERT INTO users (username, password_hash, nome, cargo_delta, ativo, inscricao_enviada) VALUES (?, ?, ?, 'CANDIDATO', 1, 0)`,
       [usuario, hash, String(nome).trim()]
     );
 
-    req.session.user = { id: Number(result.lastInsertRowid), username: usuario, nome: String(nome).trim(), cargo: 'PILOTO PROBATORIO', role: 'user' };
+    req.session.user = { id: Number(result.lastInsertRowid), username: usuario, nome: String(nome).trim(), cargo: 'CANDIDATO', role: 'user' };
     req.session.admin = null;
     res.status(201).json({ sucesso: true, user: req.session.user });
   } catch (error) {
