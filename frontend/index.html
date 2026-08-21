@@ -707,17 +707,18 @@ input[type="checkbox"], input[type="radio"]{
     <a data-page="etapa3" id="nav-etapa3" class="stage-nav" hidden>🔢 Etapa 3</a>
     <a data-page="apostila" id="nav-apostila" style="display:none;">📚 Apostila de Estudo</a>
     <a data-page="manual" id="nav-manual" style="display:none;">📖 Manual da Delta</a>
-    <div class="nav-group-label command-or-pilot" id="nav-group-administrativo">ADMINISTRATIVO</div>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="comunicados" style="display:none;">📢 Comunicados</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="avisos" style="display:none;">📋 Avisos de Curso</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="documentacao" style="display:none;">📚 Documentação</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="promovidos" style="display:none;">🏆 Promovidos</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="advertencias" style="display:none;">🛑 Advertências</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
-    <a class="command-or-pilot discord-nav" data-page="discord" data-module="bate-ponto" style="display:none;">📋 Bate-Ponto</a>
+    <div class="nav-group-label command-only" id="nav-group-administrativo">ADMINISTRATIVO</div>
+    <a class="command-only discord-nav" data-page="discord" data-module="comunicados" style="display:none;">📢 Comunicados</a>
+    <a class="command-only discord-nav" data-page="discord" data-module="avisos" style="display:none;">📋 Avisos de Curso</a>
+    <a class="command-only discord-nav" data-page="discord" data-module="documentacao" style="display:none;">📚 Documentação</a>
+    <a class="command-only discord-nav" data-page="discord" data-module="promovidos" style="display:none;">🏆 Promovidos</a>
+    <a class="command-only discord-nav" data-page="discord" data-module="advertencias" style="display:none;">🛑 Advertências</a>
+    <a class="discord-nav" data-page="discord" data-module="desligamento" style="display:none;">💠 Desligamento</a>
+    <a class="command-only discord-nav" data-page="discord" data-module="bate-ponto" style="display:none;">📋 Bate-Ponto</a>
     <a class="command-or-pilot discord-nav" data-page="discord" data-module="badges" style="display:none;">🏅 Badges</a>
 
     <div class="nav-group-label command-or-pilot" id="nav-group-informacoes">INFORMAÇÕES GERAIS</div>
+    <a class="discord-nav command-or-pilot" data-page="discord" data-module="localizacoes" style="display:none;">📍 Localizações</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="sugestoes" style="display:none;">📄 Sugestões</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="liberacao-delta" style="display:none;">🚓 Liberação-DELTA</a>
     <a class="discord-nav command-or-pilot" data-page="discord" data-module="uniforme" style="display:none;">👕 Uniforme</a>
@@ -1235,7 +1236,7 @@ input[type="checkbox"], input[type="radio"]{
 
       <div id="admin-section-fardamento" class="admin-section">
         <div class="admin-return-bar"><button type="button" class="admin-return-btn" onclick="adminTab('central',this)">← VOLTAR PARA ADMINISTRAÇÃO</button><span class="admin-return-title">Central de Administração</span></div>
-        <div class="admin-table-wrap"><div class="admin-table-head">FARDAMENTO DA UNIDADE <span class="admin-refresh">IMAGENS E CATEGORIAS</span></div><div style="padding:18px 22px;"><div class="admin-table-wrap" style="padding:15px;margin-bottom:14px"><div class="admin-table-head" style="padding:0 0 10px;border:0">ADICIONAR / EDITAR PEÇA</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px"><input id="fard-id" type="hidden"><input id="fard-cat" placeholder="Categoria"><input id="fard-titulo" placeholder="Nome da peça"><input id="fard-img" type="url" placeholder="Link da imagem"><input id="fard-ordem" type="number" placeholder="Ordem" value="0"></div><textarea id="fard-desc" rows="3" placeholder="Descrição"></textarea><div style="display:flex;gap:8px;margin-top:9px"><button class="btn-primary" onclick="salvarFardamentoItem()">SALVAR</button><button class="btn-secondary" onclick="limparFardamentoEditor()">NOVO</button></div></div><div id="fardamento-admin-lista">Carregando...</div></div></div>
+        <div class="admin-table-wrap"><div class="admin-table-head">FARDAMENTO DA UNIDADE <span class="admin-refresh">IMAGENS E CATEGORIAS</span></div><div style="padding:18px 22px;"><div class="admin-table-wrap" style="padding:15px;margin-bottom:14px"><div class="admin-table-head" style="padding:0 0 10px;border:0">ADICIONAR / EDITAR FARDAMENTO</div><input id="fard-id" type="hidden"><div class="form-field"><label>TÍTULO *</label><input id="fard-titulo" placeholder="Ex.: Fardamento Operacional"></div><div class="form-field" style="margin-top:10px"><label>DESCRIÇÃO *</label><textarea id="fard-desc" rows="10" style="min-height:220px" placeholder="Descreva o conjunto completo, incluindo camisa, calça, calçado, acessórios e demais orientações."></textarea></div><div style="display:flex;gap:8px;margin-top:9px"><button class="btn-primary" onclick="salvarFardamentoItem()">SALVAR</button><button class="btn-secondary" onclick="limparFardamentoEditor()">NOVO</button></div></div><div id="fardamento-admin-lista">Carregando...</div></div></div>
       </div>
 
       <div id="admin-section-conteudo" class="admin-section">
@@ -1272,16 +1273,31 @@ input[type="checkbox"], input[type="radio"]{
 
       <div id="admin-section-hierarquia" class="admin-section">
         <div class="admin-return-bar"><button type="button" class="admin-return-btn" onclick="adminTab('central',this)">← VOLTAR PARA ADMINISTRAÇÃO</button><span class="admin-return-title">Central de Administração</span></div>
-        <div class="admin-table-wrap">
-          <div class="admin-table-head">HIERARQUIA DA UNIDADE <span class="admin-refresh">CONTROLE RESTRITO</span></div>
-          <div style="padding:18px 22px;">
-            <p class="hierarchy-note">Somente <strong>GESTOR</strong>, <strong>SUB-GESTOR</strong> e <strong>COORDENADOR</strong> podem alterar cargos. O administrador do sistema também possui acesso para gerenciamento.</p>
-            <div id="hierarquia-atualizacao" class="admin-refresh" style="margin:0 0 12px 0;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button type="button" class="admin-tab active" id="hierarquia-subtab-membros" onclick="mostrarHierarquiaSubtab('membros',this)">HIERARQUIA</button>
+          <button type="button" class="admin-tab" id="hierarquia-subtab-desligamentos" onclick="mostrarHierarquiaSubtab('desligamentos',this)">DESLIGAMENTOS</button>
+        </div>
+        <div id="hierarquia-subtab-membros">
+          <div class="admin-table-wrap">
+            <div class="admin-table-head">HIERARQUIA DA UNIDADE <span class="admin-refresh">CONTROLE RESTRITO</span></div>
+            <div style="padding:18px 22px;">
+              <p class="hierarchy-note">Cargos: <strong>GESTOR</strong>, <strong>SUB-GESTOR</strong>, <strong>COORDENADOR</strong>, <strong>PILOTO MASTER</strong>, <strong>PILOTO DE ELITE</strong>, <strong>PILOTO ESPECIALISTA</strong>, <strong>PILOTO AVANÇADO</strong>, <strong>PILOTO ASPIRANTE</strong>, <strong>PILOTO PROBATORIO</strong> e <strong>CANDIDATO</strong>. Somente o Comando pode alterar cargos. Pilotos não possuem acesso administrativo nem edição de conteúdo.</p>
+              <div id="hierarquia-atualizacao" class="admin-refresh" style="margin:0 0 12px 0;"></div>
+            </div>
+            <table>
+              <thead><tr><th>NOME</th><th>USUÁRIO</th><th>CARGO ATUAL</th><th>STATUS</th><th>ALTERAR CARGO</th><th>AÇÃO</th></tr></thead>
+              <tbody id="hierarquia-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:25px;">Carregando usuários...</td></tr></tbody>
+            </table>
           </div>
-          <table>
-            <thead><tr><th>NOME</th><th>USUÁRIO</th><th>CARGO ATUAL</th><th>STATUS</th><th>ALTERAR CARGO</th><th>AÇÃO</th></tr></thead>
-            <tbody id="hierarquia-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:25px;">Carregando usuários...</td></tr></tbody>
-          </table>
+        </div>
+        <div id="hierarquia-subtab-desligamentos" style="display:none;">
+          <div class="admin-table-wrap">
+            <div class="admin-table-head">DESLIGAMENTOS <span class="admin-refresh">HISTÓRICO PERMANENTE</span></div>
+            <div style="padding:14px 18px;">
+              <p class="hierarchy-note">Registros de exoneração permanecem salvos mesmo quando a conta deixa de existir ou retorna posteriormente ao processo seletivo.</p>
+              <div id="hierarquia-desligamentos-lista">Carregando...</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1381,14 +1397,7 @@ function setCommandNav(fullAdminAccess, approved){
   document.querySelectorAll('.command-or-pilot').forEach(el=>el.style.display=(command||approved)?'':'none');
   // Links que já possuem páginas próprias continuam sendo a referência principal.
   const moduleLinks={
-    'comunicados': command||approved,
-    'avisos': command||approved,
-    'documentacao': command||approved,
-    'promovidos': command||approved,
-    'advertencias': command||approved,
-    'desligamento': command||approved,
     'bate-ponto': command||approved,
-    'badges': command||approved,
     'apreensoes': command||approved,
     'acoes-fechadas': command||approved,
     'uniforme': command||approved,
@@ -1408,6 +1417,7 @@ const discordModules={
   desligamento:{title:'DESLIGAMENTO',eyebrow:'ADMINISTRATIVO',desc:'Histórico de desligamentos e exonerações.',key:'desligamento'},
   badges:{title:'BADGES',eyebrow:'ADMINISTRATIVO',desc:'Condecorações e distintivos vinculados aos pilotos.',key:'badges'},
   'bate-ponto':{title:'BATE-PONTO',eyebrow:'ADMINISTRATIVO',desc:'Registre entrada e saída e consulte suas horas.',key:'bate-ponto'},
+  localizacoes:{title:'LOCALIZAÇÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Locais e referências úteis para a operação.',key:'localizacoes'},
   sugestoes:{title:'SUGESTÕES',eyebrow:'INFORMAÇÕES GERAIS',desc:'Envie sugestões ao Comando e acompanhe respostas.',key:'sugestoes'},
   'liberacao-delta':{title:'LIBERAÇÃO-DELTA',eyebrow:'INFORMAÇÕES GERAIS',desc:'Orientações e informações sobre liberação e deslocamento da unidade.',key:'liberacao-delta'},
   uniforme:{title:'UNIFORME',eyebrow:'INFORMAÇÕES GERAIS',desc:'Consulte o padrão de uniforme e peças cadastradas.',key:'uniforme'},
@@ -1426,7 +1436,7 @@ async function openDiscordModule(module){
   if(!body)return;
   document.querySelectorAll('.discord-nav').forEach(a=>a.classList.toggle('active',a.dataset.module===module));
   body.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim)">Carregando...</div>';
-  if(['comunicados','avisos','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
+  if(['comunicados','avisos','localizacoes','liberacao-delta'].includes(module)) return loadDiscordContent(module,body);
   if(module==='documentacao') return loadDiscordContent('documentacao',body);
   if(module==='promovidos') return loadPromovidos(body);
   if(module==='advertencias') return loadAdvertencias(body);
@@ -1489,29 +1499,17 @@ async function loadDesligamentos(body){
     body.innerHTML='<div class="discord-section-title">HISTÓRICO DE DESLIGAMENTOS</div><div class="discord-list">'+(html||'<div class="discord-row"><p>Nenhum desligamento registrado.</p></div>')+'</div>';
   }catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar desligamentos.</div>';}
 }
-async function loadDiscordBadges(body){
-  try{
-    const r=await fetch('/api/discord/badges',{credentials:'same-origin'}),j=await r.json();
-    if(!r.ok) throw new Error(j.erro||'Erro');
-    const can=discordCanManage();
-    body.innerHTML=`${can?`<div class="form-card" style="margin-bottom:14px;padding:15px"><div class="discord-section-title">CONCEDER BADGE</div><div class="discord-form-grid"><input id="d-badge-user" placeholder="ID do piloto"><input id="d-badge-nome" placeholder="Nome do badge"><input id="d-badge-img" placeholder="Link da imagem"><input id="d-badge-desc" placeholder="Descrição"></div><button class="btn-primary" style="margin-top:10px" onclick="salvarDiscordBadge()">CONCEDER BADGE</button></div>`:''}<div class="discord-section-title">BADGES REGISTRADOS</div><div class="discord-list">${(j.badges||[]).map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.nome)} • ${discordEsc(x.usuario_nome)}</strong><small>${discordEsc(x.criado_em)}</small></div><p>${discordEsc(x.descricao||'Sem descrição')}</p>${x.imagem_url?`<img src="${discordEsc(x.imagem_url)}" alt="" style="max-width:100px;max-height:100px;object-fit:contain;margin-top:7px;border-radius:8px">`:''}${can?`<div style="margin-top:8px"><button class="table-action danger" onclick="excluirDiscordBadge(${x.id})">EXCLUIR</button></div>`:''}</article>`).join('')||'<div class="discord-row"><p>Nenhum badge registrado.</p></div>'}</div>`;
-  }catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar badges.</div>';}
-}
+async function loadDiscordBadges(body){try{const r=await fetch('/api/discord/badges',{credentials:'same-origin'}),j=await r.json();if(!r.ok)throw new Error(j.erro||'Erro');const can=discordCanManage();const sr=await fetch('/api/discord/badge-solicitacoes',{credentials:'same-origin'});const sj=await sr.json().catch(()=>({}));if(!sr.ok)throw new Error(sj.erro||'Erro');const solicitacoes=sj.solicitacoes||[];const mine=!can?solicitacoes:[];const pending=can?solicitacoes.filter(x=>String(x.status).toUpperCase()==='PENDENTE'):[];body.innerHTML=`${!can?`<div class="form-card" style="margin-bottom:14px;padding:15px"><div class="discord-section-title">SOLICITAR BADGE</div><div class="discord-form-grid"><input id="d-badge-nome" placeholder="Nome da Badge"><input id="d-badge-img" placeholder="Link da imagem (opcional)"></div><textarea id="d-badge-desc" rows="4" placeholder="Descrição da solicitação..." style="margin-top:10px"></textarea><button class="btn-primary" style="margin-top:10px" onclick="solicitarDiscordBadge()">SOLICITAR BADGE</button></div><div class="discord-section-title">MINHA SOLICITAÇÃO</div><div class="discord-list">${mine.length?mine.map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.nome)}</strong><span class="status-chip ${String(x.status).toUpperCase()==='APROVADA'?'appr':String(x.status).toUpperCase()==='PENDENTE'?'pend':''}">${discordEsc(x.status)}</span></div><p>${discordEsc(x.descricao||'Sem descrição')}</p>${x.motivo_recusa?`<p><strong>Motivo da recusa:</strong> ${discordEsc(x.motivo_recusa)}</p>`:''}<small>${discordEsc(x.analisado_em||x.criado_em||'')}</small></article>`).join(''):'<div class="discord-row"><p>Você ainda não possui uma solicitação de Badge.</p></div>'}</div>`:''}${can&&pending.length?`<div class="discord-section-title" style="margin-top:16px">SOLICITAÇÕES PENDENTES</div><div class="discord-list">${pending.map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.nome)} • ${discordEsc(x.usuario_nome)}</strong><small>${discordEsc(x.criado_em)}</small></div><p>${discordEsc(x.descricao||'Sem descrição')}</p><div style="display:flex;gap:7px;margin-top:8px"><button class="table-action" onclick="analisarBadgeSolicitacao(${x.id},'APROVADA')">AUTORIZAR</button><button class="table-action danger" onclick="analisarBadgeSolicitacao(${x.id},'RECUSADA')">RECUSAR</button></div></article>`).join('')}</div>`:''}<div class="discord-section-title" style="margin-top:16px">BADGES REGISTRADOS</div><div class="discord-list">${(j.badges||[]).map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.nome)} • ${discordEsc(x.usuario_nome)}</strong><small>${discordEsc(x.criado_em)}</small></div><p>${discordEsc(x.descricao||'Sem descrição')}</p>${x.imagem_url?`<img src="${discordEsc(x.imagem_url)}" alt="" style="max-width:100px;max-height:100px;object-fit:contain;margin-top:7px;border-radius:8px">`:''}${can?`<div style="margin-top:8px"><button class="table-action danger" onclick="excluirDiscordBadge(${x.id})">EXCLUIR</button></div>`:''}</article>`).join('')||'<div class="discord-row"><p>Nenhum badge registrado.</p></div>'}</div>`;}catch(e){body.innerHTML=`<div style="color:#FF6B6B">${discordEsc(e.message||'Não foi possível carregar badges.')}</div>`;}}
 async function salvarDiscordBadge(){const b={usuario_id:Number(document.getElementById('d-badge-user').value),nome:document.getElementById('d-badge-nome').value,imagem_url:document.getElementById('d-badge-img').value,descricao:document.getElementById('d-badge-desc').value};const r=await fetch('/api/discord/badges',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(b)}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível conceder.');openDiscordModule('badges');}
+async function solicitarDiscordBadge(){const nome=document.getElementById('d-badge-nome')?.value.trim(),descricao=document.getElementById('d-badge-desc')?.value.trim(),imagem_url=document.getElementById('d-badge-img')?.value.trim();if(!nome)return deltaNotice('Badge','Informe o nome da Badge.');const r=await fetch('/api/discord/badge-solicitacoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({nome,descricao,imagem_url})}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível solicitar.');await deltaNotice('Solicitação enviada','Sua solicitação de Badge ficou pendente de análise.');openDiscordModule('badges');}
+async function analisarBadgeSolicitacao(id,status){let motivo='';if(!(await deltaConfirm(status==='APROVADA'?'Autorizar Badge':'Recusar Badge',status==='APROVADA'?'A solicitação será aprovada e a Badge será concedida ao piloto.':'A solicitação será recusada e será necessário informar o motivo.',{danger:status==='RECUSADA',okText:status==='APROVADA'?'AUTORIZAR':'RECUSAR'})))return;if(status==='RECUSADA'){const v=await deltaModal({title:'Motivo da recusa',subtitle:'Informe o motivo que ficará registrado para o piloto.',html:'<div class="form-field"><label>MOTIVO *</label><textarea id="badgeRecusaMotivo" rows="5" placeholder="Motivo da recusa..."></textarea></div>',collect:['badgeRecusaMotivo'],okText:'RECUSAR BADGE'});if(v===null)return;motivo=String(v.badgeRecusaMotivo||'').trim();if(!motivo)return deltaNotice('Badge','Informe o motivo da recusa.');}const r=await fetch(`/api/discord/badge-solicitacoes/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status,motivo_recusa:motivo})}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível analisar a solicitação.');await deltaNotice('Badge',j.mensagem||'Solicitação analisada.');openDiscordModule('badges');}
 async function excluirDiscordAdvertencia(id){if(!(await deltaConfirm('Excluir advertência','Este registro disciplinar será removido.',{danger:true,okText:'EXCLUIR'})))return;try{const r=await fetch(`/api/discord/advertencias/${id}`,{method:'DELETE',credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível excluir.');await deltaNotice('Advertência excluída','O registro foi removido.');openDiscordModule('advertencias');}catch(e){deltaNotice('Erro','Servidor indisponível.');}}
 async function excluirDiscordBadge(id){if(!(await deltaConfirm('Excluir badge','Este badge será removido.',{danger:true,okText:'EXCLUIR'})))return;try{const r=await fetch(`/api/discord/badges/${id}`,{method:'DELETE',credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível excluir.');await deltaNotice('Badge excluído','O badge foi removido.');openDiscordModule('badges');}catch(e){deltaNotice('Erro','Servidor indisponível.');}}
 async function loadDiscordPonto(body){body.innerHTML=`<div class="discord-section-title">CONTROLE DE SERVIÇO</div><div class="form-card" style="padding:15px"><div id="discord-ponto-status" style="padding:12px;border:1px solid var(--line);border-radius:9px;color:var(--text-dim)">Consultando...</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-primary" onclick="discordBaterPonto('entrada')">REGISTRAR ENTRADA</button><button class="btn-secondary" onclick="discordBaterPonto('saida')">REGISTRAR SAÍDA</button></div><div id="discord-ponto-hist" style="margin-top:14px"></div></div>`;try{const r=await fetch('/api/hall/resumo',{credentials:'same-origin'}),j=await r.json();document.getElementById('discord-ponto-status').innerHTML=j.pontoAberto?`🟢 <strong>PONTO ABERTO</strong><br><small>Entrada: ${discordEsc(j.pontoAberto.entrada)}</small>`:'⚪ <strong>PONTO FECHADO</strong>';document.getElementById('discord-ponto-hist').innerHTML=(j.apreensoes?'<div class="discord-section-title">ÚLTIMOS REGISTROS DE SERVIÇO</div>':'')+''}catch(e){}}
 async function discordBaterPonto(tipo){const r=await fetch('/api/hall/ponto/'+tipo,{method:'POST',credentials:'same-origin'}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Ponto',j.erro||'Não foi possível registrar.');openDiscordModule('bate-ponto');}
 async function loadSugestoes(body){try{const r=await fetch(discordCanManage()?'/api/portal/suggestions/all':'/api/portal/suggestions/mine',{credentials:'same-origin'}),j=await r.json();if(!r.ok)throw new Error(j.erro);body.innerHTML=`<div class="form-card" style="margin-bottom:14px;padding:15px"><div class="discord-section-title">NOVA SUGESTÃO</div><textarea id="d-sug-text" rows="4" placeholder="Escreva sua sugestão..."></textarea><button class="btn-primary" style="margin-top:10px" onclick="enviarDiscordSugestao()">ENVIAR SUGESTÃO</button></div><div class="discord-section-title">${discordCanManage()?'TODAS AS SUGESTÕES':'MINHAS SUGESTÕES'}</div><div class="discord-list">${(j.sugestoes||[]).map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.nome||'Minha sugestão')}</strong><small>${discordEsc(x.criado_em||'')}</small></div><p>${discordEsc(x.texto)}${x.resposta?'\n\nResposta: '+discordEsc(x.resposta):''}</p><small>STATUS: ${discordEsc(x.status)}</small></article>`).join('')||'<div class="discord-row"><p>Nenhuma sugestão.</p></div>'}</div>`}catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar sugestões.</div>';}}
 async function enviarDiscordSugestao(){const texto=document.getElementById('d-sug-text').value.trim();if(!texto)return deltaNotice('Sugestão','Digite uma sugestão.');const r=await fetch('/api/portal/suggestions',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({texto})}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível enviar.');openDiscordModule('sugestoes');}
-async function loadUniformeDiscord(body){
-  try{
-    const r=await fetch('/api/fardamento-itens',{credentials:'same-origin'}),j=await r.json();
-    if(!r.ok) throw new Error(j.erro||'Erro');
-    const html=(j.itens||[]).map(x=>`<article class="discord-channel-card"><h4>${discordEsc(x.titulo)}</h4><p>${discordEsc(x.categoria)}<br>${discordEsc(x.descricao||'Sem descrição')}</p>${x.imagem_url?`<img src="${discordEsc(x.imagem_url)}" alt="" style="width:100%;max-height:180px;object-fit:contain;margin-top:9px;border-radius:8px;background:var(--panel-2)">`:''}</article>`).join('');
-    body.innerHTML='<div class="discord-section-title">PEÇAS CADASTRADAS</div><div class="discord-channel-grid">'+(html||'<article class="discord-channel-card"><p>Nenhuma peça cadastrada.</p></article>')+'</div>'+(discordCanManage()?'<div style="margin-top:12px"><button class="btn-secondary" onclick="goPage(\'admin\');setTimeout(()=>adminTab(\'fardamento\'),0)">GERENCIAR FARDAMENTO</button></div>':'');
-  }catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar o uniforme.</div>';}
-}
+async function loadUniformeDiscord(body){try{const r=await fetch('/api/fardamento-itens',{credentials:'same-origin'}),j=await r.json();if(!r.ok)throw new Error(j.erro||'Erro');const html=(j.itens||[]).map(x=>`<article class="discord-channel-card"><h4>${discordEsc(x.titulo)}</h4><p style="white-space:pre-wrap;line-height:1.7">${discordEsc(x.descricao||'Sem descrição')}</p></article>`).join('');body.innerHTML='<div class="discord-section-title">FARDAMENTOS CADASTRADOS</div><div class="discord-channel-grid">'+(html||'<article class="discord-channel-card"><p>Nenhum fardamento cadastrado.</p></article>')+'</div>'+(discordCanManage()?'<div style="margin-top:12px"><button class="btn-secondary" onclick="goPage(\'admin\');setTimeout(()=>adminTab(\'fardamento\'),0)">GERENCIAR FARDAMENTO</button></div>':'');}catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar o fardamento.</div>';}}
 async function loadAusencia(body){try{const r=await fetch('/api/discord/ausencias',{credentials:'same-origin'}),j=await r.json();if(!r.ok)throw new Error(j.erro);const can=discordCanManage();body.innerHTML=`${can?`<div class="form-card" style="margin-bottom:14px;padding:15px"><div class="discord-section-title">NOVA AUSÊNCIA</div><div class="discord-form-grid"><input id="d-aus-user" placeholder="ID do piloto"><input id="d-aus-inicio" type="datetime-local"><input id="d-aus-fim" type="datetime-local"><input id="d-aus-motivo" placeholder="Motivo"><textarea id="d-aus-obs" rows="3" placeholder="Observações"></textarea></div><button class="btn-primary" style="margin-top:10px" onclick="salvarDiscordAusencia()">REGISTRAR AUSÊNCIA</button></div>`:''}<div class="discord-section-title">REGISTROS</div><div class="discord-list">${(j.ausencias||[]).map(x=>`<article class="discord-row"><div class="discord-row-head"><strong>${discordEsc(x.usuario_nome)} • ${discordEsc(x.status)}</strong><small>${discordEsc(x.inicio)}${x.fim?' → '+discordEsc(x.fim):''}</small></div><p>${discordEsc(x.motivo)}${x.observacoes?'\n'+discordEsc(x.observacoes):''}</p></article>`).join('')||'<div class="discord-row"><p>Nenhuma ausência registrada.</p></div>'}</div>`}catch(e){body.innerHTML='<div style="color:#FF6B6B">Não foi possível carregar ausências.</div>';}}
 async function salvarDiscordAusencia(){const b={usuario_id:Number(document.getElementById('d-aus-user').value),inicio:document.getElementById('d-aus-inicio').value,fim:document.getElementById('d-aus-fim').value,motivo:document.getElementById('d-aus-motivo').value,observacoes:document.getElementById('d-aus-obs').value};const r=await fetch('/api/discord/ausencias',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(b)}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível registrar.');openDiscordModule('ausencia');}
 function renderDiscordInfo(body,title,desc){body.innerHTML=`<div class="discord-channel-grid"><article class="discord-channel-card"><h4>${discordEsc(title)}</h4><p>${discordEsc(desc)}</p></article></div>`;}
@@ -1582,6 +1580,16 @@ async function loadMinhaSituacao(){
     loading.style.display='none';
     if(!r.ok){ empty.style.display='block'; empty.textContent=j.erro||'Não foi possível consultar sua candidatura.'; return; }
     if(!j.encontrada){
+      if(isPilotCargo(currentCargo)){
+        window.candidaturaAprovada=false;
+        setInscricaoNav(false);
+        setSituacaoNav(false);
+        setStageNav(0);
+        setHallAccess(true);
+        setStudyAccess({manual:true, apostila:false});
+        if(document.getElementById('page-situacao')?.classList.contains('active')) goPage('hall');
+        return;
+      }
       empty.style.display='block';
       window.inscricaoEnviada=false;
       window.candidaturaAprovada=false;
@@ -1593,10 +1601,11 @@ async function loadMinhaSituacao(){
     setSituacaoNav(true); card.style.display='block';
     document.getElementById('situacao-nome').textContent=j.personagem||'Candidato';
     const status=String(j.status||'PENDENTE').toUpperCase();
-    const aprovado=status==='APROVADO' || isPilotCargo(currentCargo);
+    const aprovado=status==='APROVADO';
     window.candidaturaAprovada=aprovado;
-    setHallAccess(aprovado);
-    if(currentRole==='user') setStudyAccess({manual:aprovado, apostila:true});
+    const piloto=isPilotCargo(currentCargo);
+    setHallAccess(aprovado || piloto);
+    if(currentRole==='user') setStudyAccess({manual:aprovado || piloto, apostila:!piloto});
     // Situação e etapas são exclusivas de quem ainda está no processo seletivo.
     setSituacaoNav(!aprovado);
     if(aprovado){
@@ -1623,6 +1632,11 @@ async function loadMinhaSituacao(){
 
 async function syncInscricaoAccess(){
   if(currentRole !== 'user') return true;
+  if(isPilotCargo(currentCargo)){
+    window.inscricaoEnviada=true; window.candidaturaAprovada=true;
+    setInscricaoNav(false); setSituacaoNav(false); setStageNav(0); setHallAccess(true); setStudyAccess({manual:true,apostila:false});
+    return false;
+  }
   try{
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setInscricaoNav(true); return true; }
@@ -1630,7 +1644,7 @@ async function syncInscricaoAccess(){
     const canApply = !j.inscricao_enviada || !j.encontrada;
     window.inscricaoEnviada = !canApply;
     setInscricaoNav(canApply);
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
     window.candidaturaAprovada=aprovado;
     setSituacaoNav(!canApply && j.encontrada && !aprovado);
     if(!canApply && j.encontrada && !aprovado) loadMinhaSituacao();
@@ -1688,11 +1702,15 @@ function setStageNav(stage){
 }
 
 async function syncStageAccess(idOverride){
+  if(isPilotCargo(currentCargo)){
+    setStageNav(0); setSituacaoNav(false); setHallAccess(true); setStudyAccess({manual:true,apostila:false});
+    return 0;
+  }
   try{
     const r=await fetch('/api/candidaturas/minha',{credentials:'same-origin'});
     if(!r.ok){ setStageNav(0); return 0; }
     const j=await r.json();
-    const aprovado=String(j.status||'').toUpperCase()==='APROVADO' || isPilotCargo(currentCargo);
+    const aprovado=String(j.status||'').toUpperCase()==='APROVADO';
     window.candidaturaAprovada=aprovado;
     if(aprovado){
       setStageNav(0);
@@ -1732,6 +1750,10 @@ setStageNav(0);
 let authReady=false;
 let currentRole=null;
 let currentCargo="";
+const PILOTO_CARGOS=['PILOTO PROBATORIO','PILOTO ASPIRANTE','PILOTO AVANÇADO','PILOTO ESPECIALISTA','PILOTO DE ELITE','PILOTO MASTER'];
+function isPilotCargo(cargo=currentCargo){
+  return PILOTO_CARGOS.includes(String(cargo||'').trim().toUpperCase());
+}
 window.candidaturaAprovada=false;
 window.situacaoLiberada=false;
 
@@ -1746,9 +1768,6 @@ function showRegister(){
 function setAuthError(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 function setAuthSuccess(id,text){ const el=document.getElementById(id); el.textContent=text||''; el.style.display=text?'block':'none'; }
 
-const PILOTO_CARGOS_FRONT=['PILOTO MASTER','PILOTO DE ELITE','PILOTO ESPECIALISTA','PILOTO AVANÇADO','PILOTO ASPIRANTE','PILOTO PROBATORIO'];
-function isPilotCargo(cargo){return PILOTO_CARGOS_FRONT.includes(String(cargo||'').trim().toUpperCase());}
-
 function applyRole(role, profile, initialNavigation=false){
   currentRole=role;
   currentCargo=String(profile?.cargo || '').toUpperCase();
@@ -1761,16 +1780,14 @@ function applyRole(role, profile, initialNavigation=false){
   document.getElementById('session-user-name').textContent=profile?.nome || profile?.username || '';
 
   const fullAdminAccess = role==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(currentCargo);
-  const approvedPilot = role==='user' && (profile?.aprovado===true || isPilotCargo(currentCargo));
   const adminBtn=document.getElementById('admin-nav-button');
   if(adminBtn) adminBtn.style.display=fullAdminAccess?'inline-flex':'none';
-  setCommandNav(fullAdminAccess, approvedPilot);
+  const pilotAccess = profile?.aprovado===true || isPilotCargo(currentCargo);
+  setCommandNav(fullAdminAccess, pilotAccess);
 
   document.querySelectorAll('#nav-links a').forEach(a=>{
     const page=a.dataset.page;
-    const allowed=fullAdminAccess || (approvedPilot
-      ? ['hall','minhas-apreensoes','relatorios-acoes','edital','apostila','manual','vtrs','discord'].includes(page)
-      : ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3','edital'].includes(page));
+    const allowed=fullAdminAccess || ['inscricao','situacao','apostila','manual','etapa1','etapa2','etapa3'].includes(page);
     a.style.display=allowed?'':'none';
   });
   if(fullAdminAccess){
@@ -1786,14 +1803,7 @@ function applyRole(role, profile, initialNavigation=false){
     if(relNav) relNav.style.display='';
     if(vtrNav) vtrNav.style.display='';
   }
-  if(!fullAdminAccess) {
-    setSituacaoNav(Boolean(profile?.inscricao_enviada) && !approvedPilot);
-    if(approvedPilot){
-      setHallAccess(true);
-      setStudyAccess({manual:true, apostila:true});
-      setStageNav(0);
-    }
-  }
+  if(!fullAdminAccess) setSituacaoNav(Boolean(profile?.inscricao_enviada) && !pilotAccess);
   // Para os cargos administrativos, as etapas também ficam visíveis para navegação e edição.
   if(fullAdminAccess){
     document.querySelectorAll('.stage-nav').forEach(a=>a.hidden=false);
@@ -1835,9 +1845,10 @@ function applyRole(role, profile, initialNavigation=false){
     document.getElementById('admin-login-view').style.display='none';
     document.getElementById('admin-panel').style.display='none';
     const aprovado=profile?.aprovado===true;
-    setHallAccess(aprovado);
-    setStudyAccess({manual:aprovado, apostila:Boolean(profile?.inscricao_enviada)});
-    if(aprovado) goPage('hall');
+    const piloto=isPilotCargo(currentCargo);
+    setHallAccess(aprovado || piloto);
+    setStudyAccess({manual:aprovado || piloto, apostila:!piloto && Boolean(profile?.inscricao_enviada)});
+    if(aprovado || piloto) goPage('hall');
     else if(profile?.inscricao_enviada) goPage('apostila');
     else goPage('inscricao');
     syncInscricaoAccess();
@@ -1891,39 +1902,16 @@ async function loadMinhasApreensoes(){
   }
 }
 
-let hallApreensaoEnviando=false;
 async function registrarApreensao(){
   const msg=document.getElementById('hall-apr-msg');
-  const btn=document.querySelector('#page-hall button[onclick=\"registrarApreensao()\"]');
-  if(!msg || hallApreensaoEnviando) return;
   const body={
-    ocorrencia:document.getElementById('hall-apr-ocorrencia')?.value.trim() || '',
-    id_pessoa:document.getElementById('hall-apr-id-pessoa')?.value.trim() || '',
-    imagem_url:document.getElementById('hall-apr-imagem')?.value.trim() || '',
-    observacoes:document.getElementById('hall-apr-obs')?.value.trim() || ''
+    ocorrencia:document.getElementById('hall-apr-ocorrencia').value.trim(),
+    id_pessoa:document.getElementById('hall-apr-id-pessoa').value.trim(),
+    imagem_url:document.getElementById('hall-apr-imagem').value.trim(),
+    observacoes:document.getElementById('hall-apr-obs').value.trim()
   };
-  msg.style.color='var(--text-dim)';
-  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;}
-  if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
-  if(!/^https?:\/\//i.test(body.imagem_url)){msg.textContent='O link da imagem precisa começar com http:// ou https://.';return;}
-  hallApreensaoEnviando=true;
-  if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='REGISTRANDO...';}
-  msg.textContent='Salvando apreensão...';
-  try{
-    const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok){msg.style.color='#fca5a5';msg.textContent=j.erro||`Não foi possível registrar a apreensão (HTTP ${r.status}).`;return;}
-    msg.style.color='#86efac';msg.textContent='Apreensão registrada com sucesso.';
-    document.getElementById('hall-apr-ocorrencia').value='';
-    document.getElementById('hall-apr-id-pessoa').value='';
-    document.getElementById('hall-apr-imagem').value='';
-    document.getElementById('hall-apr-obs').value='';
-    await loadHall();
-  }catch(e){console.error('[DELTA] Erro ao registrar apreensão:',e);msg.style.color='#fca5a5';msg.textContent='Servidor indisponível. Verifique a conexão e tente novamente.';}
-  finally{
-    hallApreensaoEnviando=false;
-    if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'REGISTRAR APREENSÃO';}
-  }
+  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;} if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
+  try{const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)});const j=await r.json();msg.textContent=r.ok?'Apreensão registrada com sucesso.':(j.erro||'Não foi possível registrar.');if(r.ok){document.getElementById('hall-apr-ocorrencia').value='';document.getElementById('hall-apr-id-pessoa').value='';document.getElementById('hall-apr-imagem').value='';document.getElementById('hall-apr-obs').value='';loadHall();}}catch(e){msg.textContent='Servidor indisponível.';}
 }
 async function baterPonto(tipo){
   const msg=document.getElementById('hall-ponto-msg');
@@ -2102,18 +2090,19 @@ function relatorioFields(data={}){return `<div style="display:grid;grid-template
 async function novoRelatorioAcao(admin=false){const v=await deltaModal({title:'Nova ação fechada',subtitle:'Relatório operacional oficial',html:relatorioFields({data_acao:new Date().toISOString().slice(0,16)}),collect:['relNome','relData','relV1','relV2','relDaec','relResultado','relBo','relRefens','relNeg','relObs'],okText:'SALVAR RELATÓRIO'});if(v===null)return;const body={nome_acao:v.relNome,data_acao:v.relData,veiculo1:v.relV1,veiculo2:v.relV2,daec:v.relDaec,resultado:v.relResultado,bo:v.relBo,quantidade_refens:Number(v.relRefens||0),qra_negociador:v.relNeg,observacoes:v.relObs};try{const r=await fetch('/api/relatorios-acoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)}),j=await r.json();if(!r.ok){await deltaNotice('Erro',j.erro||'Não foi possível salvar.');return;}await deltaNotice('Relatório salvo',j.mensagem||'Ação registrada.');loadRelatorios();loadRelatoriosAdmin();loadAdminOverview();}catch(e){await deltaNotice('Erro','Servidor indisponível.')}}
 async function loadRelatorios(){const box=document.getElementById('rel-lista');if(!box)return;try{const q=encodeURIComponent(document.getElementById('rel-busca')?.value||'');const r=await fetch('/api/relatorios-acoes?q='+q,{credentials:'same-origin'}),j=await r.json();if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}renderRelatorios(box,j.relatorios||[],false);}catch(e){box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}}
 async function loadRelatoriosAdmin(){const box=document.getElementById('admin-rel-lista');if(!box)return;try{const q=encodeURIComponent(document.getElementById('admin-rel-busca')?.value||'');const r=await fetch('/api/relatorios-acoes?q='+q,{credentials:'same-origin'}),j=await r.json();if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}renderRelatorios(box,j.relatorios||[],true);}catch(e){box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}}
-function renderRelatorios(box,rows,admin){box.innerHTML=`<div style="overflow:auto"><table class="admin-table"><thead><tr><th>ID</th><th>AÇÃO</th><th>DATA</th><th>RESPONSÁVEL</th><th>RESULTADO</th><th>B.O.</th><th>REFÉNS</th><th>AÇÃO</th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>#${esc(x.id)}</td><td><strong>${esc(x.nome_acao)}</strong></td><td>${esc(x.data_acao)}</td><td>${esc(x.responsavel_nome||'-')}</td><td>${esc(x.resultado)}</td><td>${esc(x.bo)}</td><td>${esc(x.quantidade_refens)}</td><td><button class="table-action" onclick="abrirRelatorio(${x.id},${admin})">VER</button></td></tr>`).join(''):'<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Nenhuma ação fechada registrada.</td></tr>'}</tbody></table></div>`}
+function renderRelatorios(box,rows,admin){box.innerHTML=`<div style="overflow:auto"><table class="admin-table"><thead><tr><th>ID</th><th>AÇÃO</th><th>DATA</th><th>RESPONSÁVEL</th><th>STATUS</th><th>RESULTADO</th><th>REFÉNS</th><th>AÇÃO</th></tr></thead><tbody>${rows.length?rows.map(x=>{const st=String(x.status||'PENDENTE').toUpperCase();const chip=st==='APROVADA'?'appr':st==='PENDENTE'?'pend':'';return `<tr><td>#${esc(x.id)}</td><td><strong>${esc(x.nome_acao)}</strong></td><td>${esc(x.data_acao)}</td><td>${esc(x.responsavel_nome||'-')}</td><td><span class="status-chip ${chip}">${esc(st.replaceAll('_',' '))}</span></td><td>${esc(x.resultado)}</td><td>${esc(x.quantidade_refens)}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="table-action" onclick="abrirRelatorio(${x.id},${admin})">VER</button>${admin&&st==='PENDENTE'?`<button class="table-action" onclick="analisarRelatorio(${x.id},'APROVAR')">APROVAR</button><button class="table-action danger" onclick="analisarRelatorio(${x.id},'RECUSAR')">RECUSAR</button>`:''}</div></td></tr>`}).join(''):'<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Nenhuma ação registrada.</td></tr>'}</tbody></table></div>`}
 async function abrirRelatorio(id,admin=false){const target=document.getElementById(admin?'admin-rel-detalhe':'rel-detalhe');if(!target)return;target.innerHTML='Carregando relatório...';try{const r=await fetch(`/api/relatorios-acoes/${id}`,{credentials:'same-origin'}),j=await r.json();if(!r.ok){target.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}const x=j.relatorio;target.innerHTML=`<div class="admin-table-wrap" style="padding:20px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div class="eyebrow-line">RELATÓRIO DE AÇÃO</div><h2 style="margin:4px 0">${esc(x.nome_acao)}</h2><div style="color:var(--text-dim);font-size:11px">#${esc(x.id)} • ${esc(x.data_acao)} • Responsável: ${esc(x.responsavel_nome||'-')}</div></div><div style="display:flex;gap:7px"><button class="table-action" onclick="editarRelatorio(${x.id},${admin})">EDITAR</button>${admin?`<button class="table-action danger" onclick="excluirRelatorio(${x.id})">EXCLUIR</button>`:''}</div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px"><div class="admin-stat"><div class="label">VEÍCULO 1</div><div class="value" style="font-size:14px">${esc(x.veiculo1||'-')}</div></div><div class="admin-stat"><div class="label">VEÍCULO 2</div><div class="value" style="font-size:14px">${esc(x.veiculo2||'-')}</div></div><div class="admin-stat"><div class="label">DAEC</div><div class="value" style="font-size:14px">${esc(x.daec)}</div></div><div class="admin-stat"><div class="label">RESULTADO</div><div class="value" style="font-size:14px">${esc(x.resultado)}</div></div><div class="admin-stat"><div class="label">B.O.</div><div class="value" style="font-size:14px">${esc(x.bo)}</div></div><div class="admin-stat"><div class="label">REFÉNS</div><div class="value" style="font-size:14px">${esc(x.quantidade_refens)}</div></div><div class="admin-stat"><div class="label">NEGOCIADOR</div><div class="value" style="font-size:14px">${esc(x.qra_negociador)}</div></div></div><div style="margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:10px"><div class="label" style="margin-bottom:8px">OBSERVAÇÕES</div><div style="white-space:pre-wrap;line-height:1.7;color:#cbd5e1">${esc(x.observacoes||'—')}</div></div></div>`;target.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){target.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}}
+async function analisarRelatorio(id,acao){if(!(await deltaConfirm(acao==='APROVAR'?'Aprovar ação':'Recusar ação',acao==='APROVAR'?'A ação passará para APROVADA e ficará válida nos históricos.':'A ação será removida dos registros operacionais e preservada integralmente na auditoria.',{danger:acao==='RECUSAR',okText:acao==='APROVAR'?'APROVAR':'RECUSAR'})))return;let motivo='';if(acao==='RECUSAR'){const v=await deltaModal({title:'Recusar ação',subtitle:'O motivo ficará registrado na auditoria.',html:'<div class="form-field"><label>MOTIVO DA RECUSA *</label><textarea id="acaoRecusaMotivo" rows="5" placeholder="Informe o motivo..."></textarea></div>',collect:['acaoRecusaMotivo'],okText:'RECUSAR AÇÃO'});if(v===null)return;motivo=String(v.acaoRecusaMotivo||'').trim();if(!motivo)return deltaNotice('Ação','Informe o motivo da recusa.');}const url=`/api/relatorios-acoes/${id}/${acao==='APROVAR'?'aprovar':'recusar'}`;const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({motivo})}),j=await r.json().catch(()=>({}));if(!r.ok)return deltaNotice('Erro',j.erro||'Não foi possível concluir a análise.');await deltaNotice('Ação',j.mensagem||'Análise concluída.');loadRelatoriosAdmin();loadRelatorios();loadAdminOverview();}
 async function editarRelatorio(id,admin=false){try{const r=await fetch(`/api/relatorios-acoes/${id}`,{credentials:'same-origin'}),j=await r.json();if(!r.ok){await deltaNotice('Erro',j.erro||'Erro');return;}const x=j.relatorio;const v=await deltaModal({title:'Editar relatório',subtitle:'Atualização do relatório oficial',html:relatorioFields(x),collect:['relNome','relData','relV1','relV2','relDaec','relResultado','relBo','relRefens','relNeg','relObs'],okText:'SALVAR ALTERAÇÕES'});if(v===null)return;const body={nome_acao:v.relNome,data_acao:v.relData,veiculo1:v.relV1,veiculo2:v.relV2,daec:v.relDaec,resultado:v.relResultado,bo:v.relBo,quantidade_refens:Number(v.relRefens||0),qra_negociador:v.relNeg,observacoes:v.relObs};const rr=await fetch(`/api/relatorios-acoes/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)}),jj=await rr.json();if(!rr.ok){await deltaNotice('Erro',jj.erro||'Erro');return;}await deltaNotice('Relatório atualizado','As alterações foram salvas e registradas no histórico.');abrirRelatorio(id,admin);loadRelatorios();loadRelatoriosAdmin();}catch(e){await deltaNotice('Erro','Servidor indisponível.')}}
 async function excluirRelatorio(id){const ok=await deltaConfirm('Excluir relatório','Esta ação removerá o relatório e registrará a exclusão no log.',{danger:true,okText:'EXCLUIR'});if(!ok)return;const r=await fetch(`/api/relatorios-acoes/${id}`,{method:'DELETE',credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json().catch(()=>({}));if(!r.ok){await deltaNotice('Erro',j.erro||'Erro');return;}await deltaNotice('Relatório excluído','A ação foi removida.');loadRelatoriosAdmin();loadAdminOverview();}
 async function loadRelatoriosResumo(){try{const r=await fetch('/api/relatorios-acoes/resumo',{credentials:'same-origin'}),j=await r.json();if(!r.ok)return;['total','mes','refens'].forEach(k=>{const e=document.getElementById('rel-res-'+k);if(e)e.textContent=j[k]??0});}catch(e){} }
 
 
-async function loadFardamentoAdmin(){const box=document.getElementById('fardamento-admin-lista');if(!box)return;try{const r=await fetch('/api/fardamento-itens',{credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json();if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">${(j.itens||[]).map(x=>`<div class="admin-table-wrap fardamento-card" data-fardamento-id="${x.id}" style="padding:14px"><div style="height:150px;border-radius:10px;overflow:hidden;background:#0b1220">${x.imagem_url?`<img src="${esc(x.imagem_url)}" alt="${esc(x.titulo)}" style="width:100%;height:100%;object-fit:contain">`:'<div style="height:100%;display:grid;place-items:center;color:var(--text-dim)">SEM IMAGEM</div>'}</div><div style="font-size:10px;color:var(--text-faint);margin-top:10px">${esc(x.categoria)}</div><h4 style="margin:3px 0">${esc(x.titulo)}</h4><p style="font-size:11px;color:var(--text-dim);min-height:34px">${esc(x.descricao||'')}</p><div style="display:flex;gap:6px"><button class="table-action" onclick='editarFardamentoItem(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDITAR</button><button class="table-action danger" onclick="excluirFardamentoItem(${x.id})">EXCLUIR</button></div></div>`).join('')||'<div style="color:var(--text-dim)">Nenhuma peça cadastrada.</div>'}</div>`}catch(e){box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}}
-function editarFardamentoItem(x){document.getElementById('fard-id').value=x.id;document.getElementById('fard-cat').value=x.categoria||'';document.getElementById('fard-titulo').value=x.titulo||'';document.getElementById('fard-img').value=x.imagem_url||'';document.getElementById('fard-ordem').value=x.ordem||0;document.getElementById('fard-desc').value=x.descricao||'';window.scrollTo({top:document.getElementById('admin-section-fardamento').offsetTop||0,behavior:'smooth'})}
-function limparFardamentoEditor(){['fard-id','fard-cat','fard-titulo','fard-img','fard-desc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});const o=document.getElementById('fard-ordem');if(o)o.value='0'}
-async function salvarFardamentoItem(){const id=document.getElementById('fard-id').value;const body={categoria:document.getElementById('fard-cat').value,titulo:document.getElementById('fard-titulo').value,imagem_url:document.getElementById('fard-img').value,ordem:Number(document.getElementById('fard-ordem').value||0),descricao:document.getElementById('fard-desc').value};const url=id?`/api/fardamento-itens/${id}`:'/api/fardamento-itens';const r=await fetch(url,{method:id?'PATCH':'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)}),j=await r.json();if(!r.ok){await deltaNotice('Erro',j.erro||'Não foi possível salvar.');return;}await deltaNotice('Fardamento salvo','A peça foi salva no banco de dados.');limparFardamentoEditor();loadFardamentoAdmin()}
-async function excluirFardamentoItem(id){if(!(await deltaConfirm('Excluir peça','A peça de fardamento será removida permanentemente do cadastro.',{danger:true,okText:'EXCLUIR'})))return;const botao=document.querySelector(`button[onclick=\"excluirFardamentoItem(${id})\"]`);if(botao){botao.disabled=true;botao.textContent='EXCLUINDO...';}try{const r=await fetch(`/api/fardamento-itens/${id}`,{method:'DELETE',credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json().catch(()=>({}));if(!r.ok){if(botao){botao.disabled=false;botao.textContent='EXCLUIR';}await deltaNotice('Erro',j.erro||`Não foi possível excluir a peça (HTTP ${r.status}).`);return;}document.querySelector(`[data-fardamento-id=\"${id}\"]`)?.remove();await deltaNotice('Fardamento excluído','O item foi removido do banco de dados.');await loadFardamentoAdmin();}catch(e){if(botao){botao.disabled=false;botao.textContent='EXCLUIR';}console.error(e);await deltaNotice('Erro','Não foi possível conectar ao servidor.');}}
+async function loadFardamentoAdmin(){const box=document.getElementById('fardamento-admin-lista');if(!box)return;try{const r=await fetch('/api/fardamento-itens',{credentials:'same-origin',cache:'no-store',headers:{'Cache-Control':'no-cache'}}),j=await r.json();if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Erro')}</div>`;return;}box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">${(j.itens||[]).map(x=>`<div class="admin-table-wrap fardamento-card" data-fardamento-id="${x.id}" style="padding:14px"><div style="font-size:10px;color:var(--text-faint)">FARDAMENTO DA UNIDADE</div><h4 style="margin:5px 0 10px">${esc(x.titulo)}</h4><div style="font-size:12px;color:var(--text-dim);white-space:pre-wrap;line-height:1.7">${esc(x.descricao||'')}</div><div style="display:flex;gap:6px;margin-top:12px"><button class="table-action" onclick='editarFardamentoItem(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDITAR</button><button class="table-action danger" onclick="excluirFardamentoItem(${x.id})">EXCLUIR</button></div></div>`).join('')||'<div style="color:var(--text-dim)">Nenhum fardamento cadastrado.</div>'}</div>`}catch(e){box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>'}}
+function editarFardamentoItem(x){document.getElementById('fard-id').value=x.id;document.getElementById('fard-titulo').value=x.titulo||'';document.getElementById('fard-desc').value=x.descricao||'';window.scrollTo({top:document.getElementById('admin-section-fardamento').offsetTop||0,behavior:'smooth'})}
+function limparFardamentoEditor(){['fard-id','fard-titulo','fard-desc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});}
+async function salvarFardamentoItem(){const id=document.getElementById('fard-id').value;const body={titulo:document.getElementById('fard-titulo').value.trim(),descricao:document.getElementById('fard-desc').value.trim()};const url=id?`/api/fardamento-itens/${id}`:'/api/fardamento-itens';const r=await fetch(url,{method:id?'PATCH':'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)}),j=await r.json().catch(()=>({}));if(!r.ok){await deltaNotice('Erro',j.erro||'Não foi possível salvar.');return;}await deltaNotice('Fardamento salvo','O fardamento foi salvo no banco de dados.');limparFardamentoEditor();loadFardamentoAdmin()}
+async function excluirFardamentoItem(id){if(!(await deltaConfirm('Excluir fardamento','Este conjunto será removido permanentemente do cadastro.',{danger:true,okText:'EXCLUIR'})))return;try{const r=await fetch(`/api/fardamento-itens/${id}`,{method:'DELETE',credentials:'same-origin',cache:'no-store'}),j=await r.json().catch(()=>({}));if(!r.ok){await deltaNotice('Erro',j.erro||`Não foi possível excluir o fardamento (HTTP ${r.status}).`);return;}await deltaNotice('Fardamento excluído','O conjunto foi removido do banco de dados.');await loadFardamentoAdmin();}catch(e){await deltaNotice('Erro','Não foi possível conectar ao servidor.');}}
 
 async function loadVtrs(){const box=document.getElementById('vtr-lista');if(!box)return;const actions=document.getElementById('vtr-actions');const canManage=currentRole==='admin'||['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());if(actions)actions.innerHTML=canManage?'<button type="button" class="btn-primary" onclick="abrirEditorVtr()">+ CADASTRAR VTR</button>':'';try{const r=await fetch('/api/discord/vtrs',{credentials:'same-origin'}),j=await r.json().catch(()=>({}));if(!r.ok){box.innerHTML=`<div style="color:#FF6B6B">${esc(j.erro||'Não foi possível carregar as VTRs.')}</div>`;return;}const rows=j.vtrs||[];if(!rows.length){box.innerHTML='<div style="padding:28px;text-align:center;color:var(--text-dim);">Nenhuma VTR cadastrada.</div>';return;}box.innerHTML=`<div style="overflow:auto"><table class="admin-table"><thead><tr><th>PREFIXO</th><th>MODELO</th><th>PLACA</th><th>STATUS</th><th>OBSERVAÇÕES</th>${canManage?'<th>AÇÕES</th>':''}</tr></thead><tbody>${rows.map(x=>{const status=String(x.status||'DISPONIVEL').toUpperCase();const chip=status==='DISPONIVEL'?'appr':status==='EM_SERVICO'?'pend':'';return `<tr><td><strong>${esc(x.prefixo)}</strong></td><td>${esc(x.modelo)}</td><td>${esc(x.placa||'-')}</td><td><span class="status-chip ${chip}">${esc(status.replaceAll('_',' '))}</span></td><td>${esc(x.observacoes||'-')}</td>${canManage?`<td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="table-action" onclick='editarVtr(${JSON.stringify(x).replace(/'/g,"&#39;")})'>EDITAR</button><button class="table-action danger" onclick="excluirVtr(${x.id})">EXCLUIR</button></div></td>`:''}</tr>`;}).join('')}</tbody></table></div>`;}catch(e){console.error(e);box.innerHTML='<div style="color:#FF6B6B">Servidor indisponível.</div>';}}
 function abrirEditorVtr(data={}){const editor=document.getElementById('vtr-editor');if(!editor)return;editor.style.display='block';editor.innerHTML=`<div class="doc-eyebrow">GERENCIAMENTO DE FROTA</div><h3 style="margin:6px 0 16px;">${data.id?'Editar VTR':'Nova VTR'}</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;"><div class="form-field"><label>PREFIXO *</label><input id="vtr-prefixo" value="${esc(data.prefixo||'')}" placeholder="Ex: P1-DELTA"></div><div class="form-field"><label>MODELO *</label><input id="vtr-modelo" value="${esc(data.modelo||'')}" placeholder="Ex: Toyota Hilux"></div><div class="form-field"><label>PLACA</label><input id="vtr-placa" value="${esc(data.placa||'')}" placeholder="Ex: DEL-0001"></div><div class="form-field"><label>STATUS</label><select id="vtr-status"><option value="DISPONIVEL">DISPONÍVEL</option><option value="EM_SERVICO">EM SERVIÇO</option><option value="MANUTENCAO">MANUTENÇÃO</option><option value="INDISPONIVEL">INDISPONÍVEL</option></select></div></div><div class="form-field" style="margin-top:12px;"><label>OBSERVAÇÕES</label><textarea id="vtr-observacoes" rows="3" placeholder="Informações adicionais da viatura">${esc(data.observacoes||'')}</textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;"><button type="button" class="btn-secondary" onclick="fecharEditorVtr()">CANCELAR</button><button type="button" class="btn-primary" onclick="salvarVtr(${Number(data.id||0)})">SALVAR VTR</button></div>`;document.getElementById('vtr-status').value=String(data.status||'DISPONIVEL').toUpperCase();editor.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -2148,7 +2137,16 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 async function liberarEtapa(id, etapa){
   const nome = etapa===1 ? 'Etapa 1' : etapa===2 ? 'Etapa 2' : 'Etapa 3';
   if(!(await deltaConfirm('Liberar etapa', `Liberar ${nome} para este candidato?`, {okText:'LIBERAR'}))) return;
-  await updateCandidatura(id,{etapa:etapa,status:'PENDENTE'});
+  try{
+    const r=await fetch(`/api/candidaturas/${id}/liberar-etapa`,{
+      method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},
+      body:JSON.stringify({etapa:Number(etapa)})
+    });
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){await deltaNotice('Não foi possível liberar',j.erro||`HTTP ${r.status}`);return;}
+    await refreshAdmin();
+    await deltaNotice('Etapa liberada',`A ${nome} foi liberada com sucesso.`);
+  }catch(e){await deltaNotice('Erro de conexão','Não foi possível comunicar com o servidor.');}
 }
 
 async function decidirCandidatura(id,status){
@@ -2173,7 +2171,7 @@ function renderCandidaturasPipeline(rows){
   const cards=etapas.map(n=>{
     const list=candidatos.filter(x=>Number(x.etapa_liberada||0)===n && String(x.status||'')!=='REPROVADO');
     return `<div style="background:rgba(12,24,40,.72);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:120px;flex:1;min-width:220px;">
-      <div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">PILOTO PROBATÓRIO • ETAPA ${n}</div>
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">CANDIDATO • ETAPA ${n}</div>
       <div style="margin-top:9px;display:flex;flex-direction:column;gap:7px;">${list.length?list.map(x=>{
         const next=n<3?`<button type="button" class="table-action" onclick="liberarEtapa(${Number(x.id)},${n+1})">LIBERAR ${n+1}ª ETAPA</button>`:`<span class="status-chip pend">AGUARDANDO DECISÃO</span>`;
         return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line-soft);"><div style="min-width:0;"><div style="font-size:13px;color:var(--text);font-weight:700;">${esc(x.personagem)}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px;">ID #${esc(x.id_jogador)}</div></div><div>${next}</div></div>`;
@@ -2183,7 +2181,7 @@ function renderCandidaturasPipeline(rows){
   const aguardando=candidatos.filter(x=>Number(x.etapa_liberada||0)===0 && String(x.status||'')==='PENDENTE');
   const aguardandoCard=`<div style="background:rgba(12,24,40,.72);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:120px;flex:1;min-width:220px;"><div style="font-size:10px;letter-spacing:1.5px;color:var(--text-dim);font-weight:700;">AGUARDANDO • ETAPA 1</div><div style="margin-top:9px;display:flex;flex-direction:column;gap:7px;">${aguardando.length?aguardando.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid var(--line-soft);"><div><div style="font-size:13px;font-weight:700;">${esc(x.personagem)}</div><div style="font-size:10px;color:var(--text-dim);">ID #${esc(x.id_jogador)}</div></div><button type="button" class="table-action" onclick="liberarEtapa(${Number(x.id)},1)">LIBERAR 1ª ETAPA</button></div>`).join(''):'<span style="font-size:12px;color:var(--text-dim);">Nenhum candidato aguardando.</span>'}</div></div>`;
   const finalizados=candidatos.filter(x=>Number(x.etapa_liberada||0)>=3 && String(x.status||'')==='APROVADO');
-  el.innerHTML=`<div class="admin-table-wrap" style="padding:16px 18px;"><div class="admin-table-head" style="padding:0 0 12px 0;border:0;">PILOTO PROBATÓRIO <span class="admin-refresh">FLUXO DE CANDIDATOS</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;">${aguardandoCard}${cards}</div>${finalizados.length?`<div style="margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(77,220,151,.2);background:rgba(77,220,151,.05);font-size:12px;color:var(--text-dim);">${finalizados.map(x=>`<strong style="color:var(--text);">${esc(x.personagem)}</strong>`).join(', ')} — 3 etapas concluídas e aprovação final. Cargo definido automaticamente como <strong style="color:var(--blue);">PILOTO PROBATORIO</strong>.</div>`:''}</div>`;
+  el.innerHTML=`<div class="admin-table-wrap" style="padding:16px 18px;"><div class="admin-table-head" style="padding:0 0 12px 0;border:0;">CANDIDATOS <span class="admin-refresh">FLUXO DE CANDIDATURAS</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;">${aguardandoCard}${cards}</div>${finalizados.length?`<div style="margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(77,220,151,.2);background:rgba(77,220,151,.05);font-size:12px;color:var(--text-dim);">${finalizados.map(x=>`<strong style="color:var(--text);">${esc(x.personagem)}</strong>`).join(', ')} — 3 etapas concluídas e aprovação final. Cargo definido automaticamente como <strong style="color:var(--blue);">PILOTO PROBATORIO</strong>.</div>`:''}</div>`;
 }
 
 async function loadCandidaturas(){
@@ -2526,7 +2524,7 @@ async function loadHierarquia(){
       const self=currentRole==='user' && Number(u.id)===Number(window.currentUserId||0);
       const disabled=self?'disabled':'';
       const aprovado=String(u.candidatura_status||'').toUpperCase()==='APROVADO';
-      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
+      const podeGerenciarAprovado=currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
       const aprovadoBadge=aprovado?'<span class="status-chip appr" style="margin-left:6px;">APROVADO</span>':'';
       const actions=aprovado && podeGerenciarAprovado && !self
         ? `<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
@@ -2546,6 +2544,31 @@ async function loadHierarquia(){
   }catch(e){ console.error(e); }
 }
 
+function mostrarHierarquiaSubtab(tab,btn){
+  const membros=document.getElementById('hierarquia-subtab-membros');
+  const deslig=document.getElementById('hierarquia-subtab-desligamentos');
+  if(!membros||!deslig)return;
+  membros.style.display=tab==='membros'?'':'none';
+  deslig.style.display=tab==='desligamentos'?'':'none';
+  document.querySelectorAll('#admin-section-hierarquia > div:first-of-type .admin-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tab==='desligamentos') loadHierarquiaDesligamentos();
+}
+async function loadHierarquiaDesligamentos(){
+  const el=document.getElementById('hierarquia-desligamentos-lista'); if(!el)return;
+  el.innerHTML='<div style="padding:15px;color:var(--text-dim)">Carregando...</div>';
+  try{
+    const r=await fetch('/api/hierarquia/desligamentos',{credentials:'same-origin',cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){el.innerHTML=`<div style="padding:15px;color:#FF6B6B">${esc(j.erro||'Não foi possível carregar os desligamentos.')}</div>`;return;}
+    const rows=j.desligamentos||[];
+    if(!rows.length){el.innerHTML='<div style="padding:15px;color:var(--text-dim)">Nenhum desligamento registrado.</div>';return;}
+    el.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>NOME</th><th>CARGO</th><th>NÍVEL</th><th>MOTIVO</th><th>OBSERVAÇÕES</th><th>DATA</th><th>RESPONSÁVEL</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.nome||'-')}</td><td>${esc(x.cargo_no_momento||'-')}</td><td>${esc(x.nivel||'-')}</td><td>${esc(x.motivo||'-')}</td><td>${esc(x.observacoes||'-')}</td><td>${esc(x.data_desligamento||x.ocorrido_em||'-')}</td><td>${esc(x.responsavel_tipo||'-')}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(e){console.error(e);el.innerHTML='<div style="padding:15px;color:#FF6B6B">Erro ao carregar desligamentos.</div>';}
+}
+async function exonerarPiloto(id){
+  abrirModalAcao({tipo:'exonerar',titulo:'Exonerar piloto',subtitulo:'Preencha os dados obrigatórios. O registro será mantido em Desligamentos.',id});
+}
 async function salvarHierarquia(id){
   const select=document.getElementById(`cargo-${id}`);
   if(!select) return;
@@ -2594,12 +2617,12 @@ async function deletarPilotoAprovado(id){
 }
 
 function canEditContent(){
-  return currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').toUpperCase());
+  return currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
 }
 function openContentModal(){ document.getElementById('content-modal').classList.add('show'); }
 function closeContentModal(){ document.getElementById('content-modal').classList.remove('show'); document.getElementById('context-content-msg').textContent=''; }
 async function openContextEditor(category,id,order){
-  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR, SUB-GESTOR e COORDENADOR podem editar este conteúdo.`); return; }
+  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR e SUB-GESTOR podem editar este conteúdo.`); return; }
   let d=null;
   if(id!=null) d=conteudoAdminCache.find(x=>Number(x.id)===Number(id));
   document.getElementById('context-content-id').value=d?d.id:'';
@@ -2824,8 +2847,8 @@ function abrirModalAcao({tipo,titulo,subtitulo,id}){
     body=`<div class="delta-modal-warning"><strong>Registro disciplinar:</strong> a exoneração ficará salva no histórico. A conta ficará fora da ativa, mas poderá retornar futuramente por nova candidatura.</div>
       <label class="delta-modal-label">Nível da exoneração</label>
       <select id="deltaNivel"><option value="">Selecione o nível...</option><option value="ABANDONO_DE_POSTO">Abandono de posto</option><option value="INSUBORDINACAO">Insubordinação</option><option value="CONDUTA_INADEQUADA">Conduta inadequada</option><option value="BAIXA_ATIVIDADE">Baixa atividade</option><option value="OUTROS">Outros</option></select>
-      <div style="height:16px"></div><label class="delta-modal-label">Motivo / detalhamento</label>
-      <textarea id="deltaMotivo" placeholder="Descreva o motivo da exoneração..."></textarea>`;
+      <div style="height:16px"></div><label class="delta-modal-label">Data do desligamento *</label><input id="deltaDataDesligamento" type="date" value="${new Date().toISOString().slice(0,10)}"><div style="height:16px"></div><label class="delta-modal-label">Motivo / detalhamento *</label>
+      <textarea id="deltaMotivo" placeholder="Descreva o motivo da exoneração..."></textarea><div style="height:16px"></div><label class="delta-modal-label">Observações adicionais</label><textarea id="deltaObservacoes" placeholder="Observações opcionais..."></textarea>`;
     button='Confirmar exoneração';
   }else if(tipo==='banir'){
     danger=true; body=`<div class="delta-modal-danger"><strong>ATENÇÃO:</strong> o banimento é permanente. A conta ficará bloqueada, mas o registro administrativo será preservado.</div>
@@ -2858,8 +2881,11 @@ async function executarAcaoVisual(tipo,id){
     if(tipo==='exonerar'){
       const nivel=document.getElementById('deltaNivel')?.value,motivo=document.getElementById('deltaMotivo')?.value.trim();
       if(!nivel) return fail('Selecione o nível da exoneração.');
+      const data_desligamento=document.getElementById('deltaDataDesligamento')?.value;
+      if(!data_desligamento) return fail('Informe a data do desligamento.');
       if(!motivo) return fail('Informe o motivo da exoneração.');
-      url=`/api/hierarquia/usuarios/${id}/exonerar`;body={nivel,motivo};
+      const observacoes=document.getElementById('deltaObservacoes')?.value.trim();
+      url=`/api/hierarquia/usuarios/${id}/exonerar`;body={nivel,motivo,observacoes,data_desligamento};
     }else if(tipo==='banir'){
       const motivo=document.getElementById('deltaMotivo')?.value.trim();
       if(!motivo) return fail('Informe o motivo do banimento.');
@@ -2916,7 +2942,7 @@ function abrirSucessoDelta(mensagem){
       document.getElementById('deltaModalCancel').onclick=()=>finish(null);
       document.getElementById('deltaModalOk').onclick=()=>{
         const el=document.getElementById('deltaModalValue');
-        let value=el?el.value:(opts.confirmOnly?true:null); if(Array.isArray(opts.collect)){ const out={}; opts.collect.forEach(id=>{const e=document.getElementById(id); out[id]=e?e.value:null;}); value={primary:value,...out}; }
+        let value=el?el.value:null; if(Array.isArray(opts.collect)){ const out={}; opts.collect.forEach(id=>{const e=document.getElementById(id); out[id]=e?e.value:null;}); value={primary:value,...out}; }
         if(opts.required && !String(value||'').trim()){
           const er=document.getElementById('deltaModalError');er.textContent=opts.requiredMessage||'Preencha o campo.';er.style.display='block';return;
         }
@@ -2930,7 +2956,7 @@ function abrirSucessoDelta(mensagem){
     });
   };
   window.deltaNotice=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Sistema DELTA',html:`<p style="margin:0;color:#cbd5e1">${esc(message)}</p>`,okText:opts.okText||'Fechar',danger:false});};
-  window.deltaConfirm=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Confirmação administrativa',html:`<div class="${opts.danger?'delta-ui-danger':'delta-ui-warn'}">${esc(message)}</div>`,okText:opts.okText||'Confirmar',danger:!!opts.danger,confirmOnly:true});};
+  window.deltaConfirm=async function(title,message,opts={}){return deltaModal({title,subtitle:opts.subtitle||'Confirmação administrativa',html:`<div class="${opts.danger?'delta-ui-danger':'delta-ui-warn'}">${esc(message)}</div>`,okText:opts.okText||'Confirmar',danger:!!opts.danger});};
 })();
 </script>
 
