@@ -1909,14 +1909,27 @@ async function loadMinhasApreensoes(){
 
 async function registrarApreensao(){
   const msg=document.getElementById('hall-apr-msg');
+  const btn=document.querySelector('#page-hall button[onclick*=\"registrarApreensao\"]');
   const body={
-    ocorrencia:document.getElementById('hall-apr-ocorrencia').value.trim(),
-    id_pessoa:document.getElementById('hall-apr-id-pessoa').value.trim(),
-    imagem_url:document.getElementById('hall-apr-imagem').value.trim(),
-    observacoes:document.getElementById('hall-apr-obs').value.trim()
+    ocorrencia:String(document.getElementById('hall-apr-ocorrencia')?.value||'').trim(),
+    id_pessoa:String(document.getElementById('hall-apr-id-pessoa')?.value||'').trim(),
+    imagem_url:String(document.getElementById('hall-apr-imagem')?.value||'').trim(),
+    observacoes:String(document.getElementById('hall-apr-obs')?.value||'').trim()
   };
-  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;} if(!/^\d+$/.test(body.id_pessoa)){msg.textContent='O ID da pessoa deve conter somente números.';return;}
-  try{const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(body)});const j=await r.json();msg.textContent=r.ok?'Apreensão registrada com sucesso.':(j.erro||'Não foi possível registrar.');if(r.ok){document.getElementById('hall-apr-ocorrencia').value='';document.getElementById('hall-apr-id-pessoa').value='';document.getElementById('hall-apr-imagem').value='';document.getElementById('hall-apr-obs').value='';loadHall();}}catch(e){msg.textContent='Servidor indisponível.';}
+  if(!body.ocorrencia||!body.id_pessoa||!body.imagem_url){if(msg)msg.textContent='Preencha ocorrência, ID da pessoa e link da foto.';return;}
+  if(!/^\d+$/.test(body.id_pessoa)){if(msg)msg.textContent='O ID da pessoa deve conter somente números.';return;}
+  if(btn)btn.disabled=true;
+  if(msg)msg.textContent='Registrando apreensão...';
+  try{
+    const r=await fetch('/api/hall/apreensoes',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){if(msg)msg.textContent=j.erro||`Não foi possível registrar a apreensão (HTTP ${r.status}).`;return;}
+    if(msg)msg.textContent='Apreensão registrada com sucesso.';
+    ['hall-apr-ocorrencia','hall-apr-id-pessoa','hall-apr-imagem','hall-apr-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    await loadHall();
+    await loadMinhasApreensoes();
+  }catch(e){console.error('[DELTA] registrarApreensao',e);if(msg)msg.textContent='Não foi possível conectar ao servidor.';}
+  finally{if(btn)btn.disabled=false;}
 }
 async function baterPonto(tipo){
   const msg=document.getElementById('hall-ponto-msg');
@@ -2622,12 +2635,12 @@ async function deletarPilotoAprovado(id){
 }
 
 function canEditContent(){
-  return currentRole==='admin' || ['GESTOR','SUB-GESTOR'].includes(String(currentCargo||'').toUpperCase());
+  return currentRole==='admin' || ['GESTOR','SUB-GESTOR','COORDENADOR'].includes(String(currentCargo||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim());
 }
 function openContentModal(){ document.getElementById('content-modal').classList.add('show'); }
 function closeContentModal(){ document.getElementById('content-modal').classList.remove('show'); document.getElementById('context-content-msg').textContent=''; }
 async function openContextEditor(category,id,order){
-  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR e SUB-GESTOR podem editar este conteúdo.`); return; }
+  if(!canEditContent()) { await deltaNotice('Aviso', `Somente GESTOR, SUB-GESTOR e COORDENADOR podem editar este conteúdo.`); return; }
   let d=null;
   if(id!=null) d=conteudoAdminCache.find(x=>Number(x.id)===Number(id));
   document.getElementById('context-content-id').value=d?d.id:'';

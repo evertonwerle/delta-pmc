@@ -20,7 +20,7 @@ module.exports = async function pilotoAprovado(req, res, next) {
     return res.status(403).json({ erro: 'Sua conta não está ativa.' });
   }
 
-  const cargo = String(user.cargo_delta || '').toUpperCase();
+  const cargo = String(user.cargo_delta || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
   const eComando = COMANDO.includes(cargo);
 
   // Gestor, Sub-Gestor e Coordenador são usuários-piloto com acesso
